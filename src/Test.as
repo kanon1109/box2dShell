@@ -8,6 +8,7 @@ import cn.geckos.box2dShell.data.CircleData;
 import cn.geckos.box2dShell.data.PolyData;
 import cn.geckos.box2dShell.engine.B2dShell;
 import cn.geckos.box2dShell.engine.Box2dParser;
+import cn.geckos.utils.MathUtil;
 import flash.display.DisplayObject;
 import flash.display.Sprite;
 import flash.events.Event;
@@ -32,7 +33,7 @@ public class Test extends Sprite
 		this.b2dShell.velocityIterations = 10;
 		this.b2dShell.positionIterations = 10;
 		this.b2dShell.createWorld(0, 10, stage, true);
-		this.addChild(this.b2dShell.drawDebug());
+		this.b2dShell.drawDebug(this);
 		this.floorMc = this.getChildByName("floor_mc") as Sprite;
 		
 		var polyData:PolyData = new PolyData();
@@ -69,9 +70,8 @@ public class Test extends Sprite
 			var o:DisplayObject = arr[i];
 			this.addChild(o);
 		}
-		this.addChild(this.b2dShell.drawDebug());
 		//去掉注释你将看到Box2dParser解析的this.b2dShell数据
-		trace(Box2dParser.encode(this.b2dShell));
+		//trace(Box2dParser.encode(this.b2dShell));
 	}
 	
 	private function keyDownHandler(event:KeyboardEvent):void 
@@ -79,9 +79,10 @@ public class Test extends Sprite
 		switch(event.keyCode)
 		{
 			case Keyboard.SPACE:
-					var bodyA:b2Body = this.createPoly();
+					//var bodyA:b2Body = this.createPoly();
 					var bodyB:b2Body = this.createRect();
-					this.createJoint(bodyA, bodyB);
+					bodyB.SetAngle(MathUtil.dgs2rds(45));
+					//this.createJoint(bodyA, bodyB);
 				break;
 			case Keyboard.D:
 					//销毁有显示对象装饰的刚体 box2d的debug显示对象除外

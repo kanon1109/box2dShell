@@ -137,7 +137,6 @@ public class Box2dParser
 		circleData.friction = shapeData.friction;
 		circleData.density = shapeData.density;
 		circleData.restitution = shapeData.restitution;
-		circleData.bodyLabel = shapeData.bodyLabel;
 		circleData.postion = new Point(shapeData.postion.x, shapeData.postion.y);
 		return b2dShell.createCircle(circleData);
 	}

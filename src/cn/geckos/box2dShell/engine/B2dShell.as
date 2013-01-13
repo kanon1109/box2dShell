@@ -54,7 +54,6 @@ public class B2dShell
 	private var _mouseEnabled:Boolean;
 	//鼠标是否点击
 	private var isMouseDown:Boolean;
-	private var isMouseMove:Boolean;
 	//鼠标位置
 	private var mouseXWorldPhys:Number;
 	private var mouseYWorldPhys:Number;
@@ -62,7 +61,9 @@ public class B2dShell
 	private var mousePVec:b2Vec2;
 	//刚体装置物
 	private var fixtureDef:b2FixtureDef;
-	public function B2dShell() 
+	//调试用的绘制容器
+	private var debugSprite:Sprite;
+	public function B2dShell()
 	{
 		this.bodyDef = new b2BodyDef();
 		this.mousePVec = new b2Vec2();
@@ -137,7 +138,6 @@ public class B2dShell
 		{
 			//设置顶点
 			var vertexCount:int = bodyData.vertices.length;
-			trace("vertexCount", vertexCount, "bodyData.vertices", bodyData.vertices);
 			if (vertexCount <= 2)
 				throw new Error("多边形顶点不能少于3个");
 			
@@ -257,7 +257,6 @@ public class B2dShell
 		return null;
 	}
 	
-	
 	/**
 	 * 获取关节列表
 	 * @return 关节列表
@@ -271,7 +270,6 @@ public class B2dShell
 		}
 		return arr;
 	}
-	
 	
 	//======================
 	// GetBodyAtMouse
@@ -310,7 +308,6 @@ public class B2dShell
 		return body;
 	}
 	
-	
 	//======================
 	// Mouse Drag 
 	//======================
@@ -318,8 +315,8 @@ public class B2dShell
 	{
 		// mouse press
 		if (!this.stage || !this.mouseEnabled) return;
-		if (this.isMouseDown && !this.mouseJoint){
-			
+		if (this.isMouseDown && !this.mouseJoint)
+		{
 			var body:b2Body = this.getBodyAtMouse();
 			if (body)
 			{
@@ -334,7 +331,8 @@ public class B2dShell
 			}
 		}
 		// mouse release
-		if (!this.isMouseDown){
+		if (!this.isMouseDown)
+		{
 			if (this.mouseJoint)
 			{
 				this.world.DestroyJoint(this.mouseJoint);
@@ -467,9 +465,7 @@ public class B2dShell
 			//bb = bb.GetNext(下一个值为它的GetNext)
 			if (bb.GetUserData() && bb.GetUserData().bodyLabel) 
 			{
-				trace("bb.GetUserData().bodyLabel", bb.GetUserData().bodyLabel);
 				var label:String = bb.GetUserData().bodyLabel;
-				trace(label, bodyLabel);
 				if (label == bodyLabel)
 					return bb;
 			}
@@ -481,18 +477,18 @@ public class B2dShell
 	 * 调试绘制
 	 * @return  绘制的容器
 	 */
-	public function drawDebug():Sprite
+	public function drawDebug(container:DisplayObjectContainer):void
 	{
-		var debugSprite:Sprite = new Sprite();
+		if (this.debugSprite) return;
+		this.debugSprite = new Sprite();
+		container.addChild(this.debugSprite);
 		var debugDraw:b2DebugDraw = new b2DebugDraw();
-		debugDraw.SetSprite(debugSprite);
+		debugDraw.SetSprite(this.debugSprite);
 		debugDraw.SetLineThickness(.2);
 		debugDraw.SetDrawScale(conversion);
-		
 		debugDraw.SetAlpha(1);
 		debugDraw.SetFlags(b2DebugDraw.e_jointBit | b2DebugDraw.e_shapeBit);
 		this.world.SetDebugDraw(debugDraw);
-		return debugSprite;
 	}
 	
 	/**
@@ -506,7 +502,6 @@ public class B2dShell
 			this.destroyBody(bb);
 		}
 	}
-	
 	
 	/**
 	 * 更新鼠标位置
@@ -528,38 +523,24 @@ public class B2dShell
 	private function stageMouseUp(event:MouseEvent):void 
 	{
 		this.isMouseDown = false;
-		//trace("this.isMouseDown = false;");
 	}
-	
 	
 	/**
 	 * 时间步
 	 */
-	public function get timeStep():Number 
-	{
-		return _timeStep;
-	}
-	
+	public function get timeStep():Number {	return _timeStep; }
 	public function set timeStep(value:Number):void 
 	{
 		_timeStep = value;
 	}
 	
-	public function get positionIterations():int 
-	{
-		return _positionIterations;
-	}
-	
+	public function get positionIterations():int { return _positionIterations; }
 	public function set positionIterations(value:int):void 
 	{
 		_positionIterations = value;
 	}
 	
-	public function get velocityIterations():int 
-	{
-		return _velocityIterations;
-	}
-	
+	public function get velocityIterations():int { return _velocityIterations; }
 	public function set velocityIterations(value:int):void 
 	{
 		_velocityIterations = value;
@@ -582,5 +563,6 @@ public class B2dShell
 	}
 	
 	public function get world():b2World { return _world; };
+	
 }
 }
