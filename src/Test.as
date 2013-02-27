@@ -2,13 +2,11 @@ package
 {
 import Box2D.Common.Math.b2Vec2;
 import Box2D.Dynamics.b2Body;
-import Box2D.Dynamics.Joints.b2FrictionJointDef;
 import Box2D.Dynamics.Joints.b2WeldJointDef;
 import cn.geckos.box2dShell.data.CircleData;
 import cn.geckos.box2dShell.data.PolyData;
 import cn.geckos.box2dShell.engine.B2dShell;
 import cn.geckos.box2dShell.engine.Box2dParser;
-import cn.geckos.utils.MathUtil;
 import flash.display.DisplayObject;
 import flash.display.Sprite;
 import flash.events.Event;
@@ -26,6 +24,7 @@ public class Test extends Sprite
 	private var boxMc:Sprite;
 	private var circleMc:Sprite;
 	private var floorMc:Sprite;
+	private var body:b2Body;
 	public function Test() 
 	{
 		this.b2dShell = new B2dShell();
@@ -80,14 +79,28 @@ public class Test extends Sprite
 		{
 			case Keyboard.SPACE:
 					//var bodyA:b2Body = this.createPoly();
-					var bodyB:b2Body = this.createRect();
-					bodyB.SetAngle(MathUtil.dgs2rds(45));
+					this.body = this.createCircle();
+					//bodyB.SetAngle(MathUtil.dgs2rds(45));
 					//this.createJoint(bodyA, bodyB);
 				break;
 			case Keyboard.D:
 					//销毁有显示对象装饰的刚体 box2d的debug显示对象除外
 					this.b2dShell.destroyBody(this.b2dShell.getBodyByPostion(mouseX, mouseY));
 					this.b2dShell.destroyBody(this.b2dShell.getBodyByLabel("instance171"));
+				break;
+			case Keyboard.LEFT:
+				if (this.body)
+				{
+					trace(this.body.GetLinearVelocity().x - 6);
+					if (this.body.GetLinearVelocity().x - 6 > -6)
+						this.body.SetLinearVelocity(new b2Vec2(this.body.GetLinearVelocity().x - 6, 0));
+					else
+						this.body.SetLinearVelocity(new b2Vec2( -6, 0));
+				}
+				break;
+			case Keyboard.RIGHT:
+				if (this.body)
+					this.body.SetLinearVelocity(new b2Vec2(this.body.GetLinearVelocity().x + 3, 0));
 				break;
 		}
 	}

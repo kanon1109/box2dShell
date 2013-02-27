@@ -10,7 +10,6 @@ import flash.events.Event;
 import flash.events.KeyboardEvent;
 import flash.geom.Point;
 import flash.ui.Keyboard;
-
 /**
  * ...线条地板测试
  * @author 

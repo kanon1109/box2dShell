@@ -582,8 +582,8 @@ public class Box2dParser
 				//元素内部顶点坐标
 				for (var j:int = 0; j < verLength; j += 1)
 				{
-					var x:Number = vector[j].x * B2dShell.conversion;
-					var y:Number = vector[j].y * B2dShell.conversion;
+					var x:Number = vector[j].x * B2dShell.CONVERSION;
+					var y:Number = vector[j].y * B2dShell.CONVERSION;
 					shapeObj.vertices[j] = [x, y];
 				}
 			}

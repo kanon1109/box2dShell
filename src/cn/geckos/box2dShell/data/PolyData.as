@@ -13,7 +13,6 @@ public class PolyData extends BodyData
 	protected var _height:Number;
 	//顶点列表
 	protected var _vertices:Array;
-	
 	public function PolyData() 
 	{
 		

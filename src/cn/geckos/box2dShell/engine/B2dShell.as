@@ -11,7 +11,9 @@ import Box2D.Dynamics.b2DebugDraw;
 import Box2D.Dynamics.b2Fixture;
 import Box2D.Dynamics.b2FixtureDef;
 import Box2D.Dynamics.b2World;
+import Box2D.Dynamics.Controllers.b2BuoyancyController;
 import Box2D.Dynamics.Joints.b2Joint;
+import Box2D.Dynamics.Joints.b2JointEdge;
 import Box2D.Dynamics.Joints.b2MouseJoint;
 import Box2D.Dynamics.Joints.b2MouseJointDef;
 import cn.geckos.box2dShell.Box2DSeparator.b2Separator;
@@ -21,7 +23,11 @@ import cn.geckos.utils.MathUtil;
 import flash.display.DisplayObject;
 import flash.display.DisplayObjectContainer;
 import flash.display.Sprite;
+import flash.display.Stage;
 import flash.events.MouseEvent;
+import flash.geom.Point;
+import flash.geom.Rectangle;
+import flash.utils.Dictionary;
 /**
  * ...box2d壳
  * 用于使用对象创建box2d的数据
@@ -36,18 +42,18 @@ public class B2dShell
 	private var doSleep:Boolean;
 	//时间步
 	private var _timeStep:Number;
-	//速度迭代
+	//速度计算层级 用于精准性
 	private var _velocityIterations:int;
-	//位置迭代
+	//位置计算层级
 	private var _positionIterations:int;
 	//刚体
 	private var body:b2Body;
 	//刚体数据
 	private var bodyDef:b2BodyDef;
 	//米和像素的转换单位
-	public static var conversion:int = 30;
-	//外部容器对象
-	private var stage:DisplayObjectContainer;
+	public static var CONVERSION:int = 30;
+	//舞台
+	private var stage:Stage;
 	//鼠标关节点
 	private var mouseJoint:b2MouseJoint;
 	//鼠标点击
@@ -57,17 +63,22 @@ public class B2dShell
 	//鼠标位置
 	private var mouseXWorldPhys:Number;
 	private var mouseYWorldPhys:Number;
-	//鼠标坐标
-	private var mousePVec:b2Vec2;
 	//刚体装置物
 	private var fixtureDef:b2FixtureDef;
 	//调试用的绘制容器
 	private var debugSprite:Sprite;
+	private var destroyJointDict:Dictionary;
+	//浮力调节器
+	private var buoyancyController:b2BuoyancyController;
+	//调试绘制
+	private var debugDraw:b2DebugDraw;
+	//wrapAround范围
+	private var _wrapAroundRange:Rectangle;
 	public function B2dShell()
 	{
 		this.bodyDef = new b2BodyDef();
-		this.mousePVec = new b2Vec2();
 		this.fixtureDef = new b2FixtureDef();
+		this.destroyJointDict = new Dictionary();
 	}
 	
 	/**
@@ -77,12 +88,14 @@ public class B2dShell
 	 * @param	stage 舞台
 	 * @param	doSleep 是否休眠
 	 */
-	public function createWorld(x:Number, y:Number, stage:DisplayObjectContainer, doSleep:Boolean):void
+	public function createWorld(x:Number, y:Number, stage:Stage, doSleep:Boolean):void
 	{
 		this.gravity = new b2Vec2(x, y);
 		this.stage = stage;
 		this.doSleep = doSleep;
 		this._world = new b2World(this.gravity, this.doSleep);
+		if (!this.wrapAroundRange)
+			this.wrapAroundRange = new Rectangle(0, 0, stage.stageWidth, stage.stageHeight);
 	}
 	
 	/**
@@ -92,7 +105,26 @@ public class B2dShell
 	{
 		this.clearAll();
 		this._world = null;
+		this.wrapAroundRange = null;
 		this.gravity = null;
+	}
+	
+	/**
+	 * 销毁b2dShell
+	 */
+	public function destroy():void
+	{
+		this.clearWorld();
+		this.debugDraw = null;
+		if (this.debugSprite && 
+			this.debugSprite.parent)
+			this.debugSprite.parent.removeChild(this.debugSprite);
+		this.debugSprite = null;
+		this.mouseJoint = null;
+		this.stage = null;
+		this.bodyDef = null;
+		this.fixtureDef = null;
+		this.destroyJointDict = null;
 	}
 	
 	/**
@@ -103,16 +135,23 @@ public class B2dShell
 	public function createPoly(bodyData:PolyData):b2Body
 	{
 		//位置
-		this.bodyDef.position.Set(bodyData.postion.x / conversion, bodyData.postion.y / conversion);
+		this.bodyDef.position.Set(bodyData.postion.x / CONVERSION, bodyData.postion.y / CONVERSION);
 		this.bodyDef.type = bodyData.bodyType;
+		//是否为子弹
+		this.bodyDef.bullet = bodyData.bullet;
 		//摩擦力
 		this.fixtureDef.friction = bodyData.friction;
 		//密度,静态物体需要0密度 
 		this.fixtureDef.density = bodyData.density;
 		//弹性 0-1
 		this.fixtureDef.restitution = bodyData.restitution;
-		this.fixtureDef.shape = boxShape;
 		this.bodyDef.userData = { };
+		this.bodyDef.userData.params = bodyData.params;
+		//是否环绕屏幕
+		this.bodyDef.userData.isWrapAround = bodyData.isWrapAround;
+		//环绕屏幕的方向
+		if (this.bodyDef.userData.isWrapAround)
+			this.bodyDef.userData.wrapAroundDirection = bodyData.wrapAroundDirection;
 		if (bodyData.displayObject)
 		{
 			//用户数据,可为显示对象,或为自己的对象
@@ -125,13 +164,15 @@ public class B2dShell
 		this.bodyDef.userData.bodyLabel = bodyData.bodyLabel;
 		//创建刚体
 		this.body = this.world.CreateBody(this.bodyDef);
+		if (bodyData.rotation)
+			this.body.SetAngle(MathUtil.dgs2rds(bodyData.rotation));
 		//多边形写义
 		var boxShape:b2PolygonShape = new b2PolygonShape();
 		if (!bodyData.vertices)
 		{
 			//设置注册点
-			boxShape.SetAsBox(bodyData.boxPoint.x / conversion, bodyData.boxPoint.y / conversion);
-			fixtureDef.shape = boxShape;
+			boxShape.SetAsBox(bodyData.boxPoint.x / CONVERSION, bodyData.boxPoint.y / CONVERSION);
+			this.fixtureDef.shape = boxShape;
 			this.body.CreateFixture(fixtureDef);
 		}
 		else
@@ -146,8 +187,8 @@ public class B2dShell
 			for (var i:int = 0; i < vertexCount; i += 1)
 			{
 				var b2v:b2Vec2 = new b2Vec2();
-				var x:Number = bodyData.vertices[i][0] / conversion;
-				var y:Number = bodyData.vertices[i][1] / conversion;
+				var x:Number = bodyData.vertices[i][0] / CONVERSION;
+				var y:Number = bodyData.vertices[i][1] / CONVERSION;
 				b2v.Set(x, y);
 				vertices.push(b2v);
 			}
@@ -170,10 +211,12 @@ public class B2dShell
 	public function createCircle(bodyData:CircleData):b2Body
 	{
 		//位置
-		this.bodyDef.position.Set(bodyData.postion.x / B2dShell.conversion, bodyData.postion.y / conversion);
+		this.bodyDef.position.Set(bodyData.postion.x / CONVERSION, bodyData.postion.y / CONVERSION);
 		//圆形写义
-		var circleShape:b2CircleShape = new b2CircleShape(bodyData.radius / conversion);
+		var circleShape:b2CircleShape = new b2CircleShape(bodyData.radius / CONVERSION);
 		this.bodyDef.type = bodyData.bodyType;
+		//是否为子弹
+		this.bodyDef.bullet = bodyData.bullet;
 		//摩擦力
 		this.fixtureDef.friction = bodyData.friction;
 		//密度,静态物体需要0密度
@@ -182,6 +225,12 @@ public class B2dShell
 		this.fixtureDef.restitution = bodyData.restitution;
 		this.fixtureDef.shape = circleShape;
 		this.bodyDef.userData = { };
+		this.bodyDef.userData.params = bodyData.params;
+		//是否环绕屏幕
+		this.bodyDef.userData.isWrapAround = bodyData.isWrapAround;
+		//环绕屏幕的方向
+		if (this.bodyDef.userData.isWrapAround)
+			this.bodyDef.userData.wrapAroundDirection = bodyData.wrapAroundDirection;
 		if (bodyData.displayObject)
 		{
 			//用户数据,可为显示对象,或为自己的对象
@@ -194,9 +243,57 @@ public class B2dShell
 		this.bodyDef.userData.bodyLabel = bodyData.bodyLabel;
 		//创建刚体
 		this.body = this.world.CreateBody(this.bodyDef);
+		if (bodyData.rotation)
+			this.body.SetAngle(MathUtil.dgs2rds(bodyData.rotation));
 		//创建图形
 		this.body.CreateFixture(fixtureDef);
 		return this.body;
+	}
+	
+	/**
+	 * 创建浮力
+	 * @param	p        	水面的法向量
+	 * @param	offset   	水面的位置 ＂注意这里和flash内的y轴方向相反，所以你需要设置为坐标的负数＂
+	 * @param	density　	水的密度
+	 * @param	linearDrag　水中移动阻尼
+	 * @param	angularDrag	水中的旋转阻尼
+	 */
+	public function createBuoyancy(p:Point, offset:Number, density:Number, linearDrag:Number, angularDrag:Number):void
+	{
+		if (this.buoyancyController || !this.world) return;
+		this.buoyancyController = new b2BuoyancyController();
+		//设置b2BuoyancyController对象的一些基本属性
+		//设置水面的法向量
+		this.buoyancyController.normal.Set(p.x, p.y);
+		//设置水面的位置
+		this.buoyancyController.offset = offset / CONVERSION;
+		//设置水的密度，因为我们创建的刚体密度是3，所以水的密度要大于3
+		this.buoyancyController.density = density;
+		//设置刚体在水中的移动阻尼
+		this.buoyancyController.linearDrag = linearDrag;
+		//设置刚体在水中的旋转阻尼
+		this.buoyancyController.angularDrag = angularDrag;
+		this.world.AddController(this.buoyancyController);
+	}
+	
+	/**
+	 * 创建需要使用浮力的刚体
+	 * @param	body  需要使用浮力的刚体
+	 */
+	public function addBuoyancyBody(body:b2Body):void
+	{
+		if (!this.buoyancyController || !body) return;
+		this.buoyancyController.AddBody(body);
+	}
+	
+	/**
+	 * 删除不需要使用浮力的刚体
+	 * @param	body  不需要使用浮力的刚体
+	 */
+	public function removeBuoyancyBody(body:b2Body):void
+	{
+		if (!this.buoyancyController || !body) return;
+		this.buoyancyController.RemoveBody(body);
 	}
 	
 	/**
@@ -204,8 +301,9 @@ public class B2dShell
 	 */
 	public function render():void
 	{
-		this.updataMousePostion();
+		this.updateMousePostion();
 		this.mouseDrag();
+		this.updateDestroyJoint();
 		//刷新物理世界
 		this.world.Step(this.timeStep, this.velocityIterations, this.positionIterations);
 		this.world.ClearForces();
@@ -217,10 +315,75 @@ public class B2dShell
 			if (this.userDataHasDisplayObject(bb))
 			{
 				var dpObj:DisplayObject = bb.GetUserData().dpObj;
-				dpObj.x = bb.GetPosition().x * conversion;
-				dpObj.y = bb.GetPosition().y * conversion;
+				dpObj.x = bb.GetPosition().x * CONVERSION;
+				dpObj.y = bb.GetPosition().y * CONVERSION;
 				dpObj.rotation = MathUtil.rds2dgs(bb.GetAngle());
 			}
+			this.bodyWrapAround(bb, this.wrapAroundRange);
+		}
+	}
+	
+	/**
+	 * 设置刚体环绕屏幕
+	 * @param	body    	需要环绕的刚体
+	 * @param	range   	运动范围
+	 */
+	private function bodyWrapAround(body:b2Body, range:Rectangle):void
+	{
+		if (!body) return;
+		var userData:Object = body.GetUserData();
+		if (!userData || !userData.isWrapAround) return;
+		//没有关节组的刚体
+		if (!body.GetJointList())
+		{
+			var isHorizontal:Boolean;//横
+			var isVertical:Boolean;//纵
+			var direction:int = userData.wrapAroundDirection//方向
+			if (direction == 0)
+			{
+				isHorizontal = true;
+				isVertical = false;
+			}
+			else if (direction == 1)
+			{
+				isHorizontal = false;
+				isVertical = true;
+			}
+			else if (direction == 2)
+			{
+				isHorizontal = true;
+				isVertical = true;
+			}
+			if (isHorizontal)
+			{
+				if (body.GetPosition().x * CONVERSION > range.right)
+					body.SetPosition(new b2Vec2(range.left / CONVERSION, body.GetPosition().y));
+				else if (body.GetPosition().x * CONVERSION < range.left)
+					body.SetPosition(new b2Vec2(range.right / CONVERSION, body.GetPosition().y));
+			}
+			if (isVertical)
+			{
+				if (body.GetPosition().y * CONVERSION > range.bottom)
+					body.SetPosition(new b2Vec2(body.GetPosition().x, range.top / CONVERSION));
+				else if (body.GetPosition().y * CONVERSION < range.top)
+					body.SetPosition(new b2Vec2(body.GetPosition().x, range.bottom / CONVERSION));
+			}
+		}
+	}
+	
+	/**
+	 * 更新刚体关键的状态 用于删除关节
+	 */
+	private function updateDestroyJoint():void 
+	{
+		//将要销毁关节的刚体缓存在destroyJointDict中
+		for each (var body:b2Body in this.destroyJointDict) 
+		{
+			for (var j:b2JointEdge = body.GetJointList(); j; j = j.next)
+			{
+				body.GetWorld().DestroyJoint(j.joint);
+			}
+			delete this.destroyJointDict[body];
 		}
 	}
 	
@@ -274,14 +437,26 @@ public class B2dShell
 	//======================
 	// GetBodyAtMouse
 	//======================
-	private function getBodyAtMouse(includeStatic:Boolean = false):b2Body
+	private function getBodyAtMouse(includeStatic:Boolean = true):b2Body
 	{
 		// Make a small box.
 		if (!this.stage || !this.mouseEnabled) return null;
-		this.mousePVec.Set(this.mouseXWorldPhys, this.mouseYWorldPhys);
+		return this.getBodyByPostion(this.mouseXWorldPhys, this.mouseYWorldPhys, includeStatic);
+	}
+	
+	/**
+	 * 根据坐标返回刚体数据
+	 * @param	x 				x位置
+	 * @param	y 				y位置
+	 * @param	includeStatic   是否包括静态刚体
+	 * @return  返回刚体
+	 */
+	public function getBodyByPostion(x:Number, y:Number, includeStatic:Boolean = true):b2Body
+	{
+		var posVec:b2Vec2 = new b2Vec2(x, y);
 		var aabb:b2AABB = new b2AABB();
-		aabb.lowerBound.Set(this.mouseXWorldPhys - 0.001, this.mouseYWorldPhys - 0.001);
-		aabb.upperBound.Set(this.mouseXWorldPhys + 0.001, this.mouseYWorldPhys + 0.001);
+		aabb.lowerBound.Set(x - 0.001, y - 0.001);
+		aabb.upperBound.Set(x + 0.001, y + 0.001);
 		var body:b2Body = null;
 		var fixture:b2Fixture;
 		
@@ -291,8 +466,8 @@ public class B2dShell
 			var shape:b2Shape = fixture.GetShape();
 			if (fixture.GetBody().GetType() != b2Body.b2_staticBody || includeStatic)
 			{
-				//mousePVec 不是从外部传进来的 是world内部的
-				var inside:Boolean = shape.TestPoint(fixture.GetBody().GetTransform(), mousePVec);
+				//posVec 不是从外部传进来的 是world内部的
+				var inside:Boolean = shape.TestPoint(fixture.GetBody().GetTransform(), posVec);
 				if (inside)
 				{
 					body = fixture.GetBody();
@@ -317,7 +492,7 @@ public class B2dShell
 		if (!this.stage || !this.mouseEnabled) return;
 		if (this.isMouseDown && !this.mouseJoint)
 		{
-			var body:b2Body = this.getBodyAtMouse();
+			var body:b2Body = this.getBodyAtMouse(false);
 			if (body)
 			{
 				var md:b2MouseJointDef = new b2MouseJointDef();
@@ -364,7 +539,7 @@ public class B2dShell
 		{
 			if (!this.isMouseDown)
 			{
-				var body:b2Body = this.getBodyAtMouse(true);
+				var body:b2Body = this.getBodyAtMouse();
 				this.destroyBody(body);
 			}
 		}
@@ -406,8 +581,20 @@ public class B2dShell
 				if (displayObj.parent)
 					displayObj.parent.removeChild(displayObj);
 			}
+			if (this.buoyancyController)
+				this.buoyancyController.RemoveBody(body);
 			this.world.DestroyBody(body);
 		}
+	}
+	
+	/**
+	 * 销毁刚体所有的关节
+	 * @param	body  需要消耗关节的刚体
+	 */
+	public function destroyBodyAllJoint(body:b2Body):void
+	{
+		if (this.destroyJointDict && body) 
+			this.destroyJointDict[body] = body;
 	}
 	
 	/**
@@ -416,7 +603,7 @@ public class B2dShell
 	 * @param	y y位置
 	 * @return  返回刚体
 	 */
-	public function getBodyByPostion(x:Number, y:Number):b2Body
+	public function getBodyByDisplayObjPostion(x:Number, y:Number):b2Body
 	{
 		for (var bb:b2Body = this.world.GetBodyList(); bb; bb = bb.GetNext())
 		{
@@ -479,16 +666,23 @@ public class B2dShell
 	 */
 	public function drawDebug(container:DisplayObjectContainer):void
 	{
-		if (this.debugSprite) return;
-		this.debugSprite = new Sprite();
-		container.addChild(this.debugSprite);
-		var debugDraw:b2DebugDraw = new b2DebugDraw();
-		debugDraw.SetSprite(this.debugSprite);
-		debugDraw.SetLineThickness(.2);
-		debugDraw.SetDrawScale(conversion);
-		debugDraw.SetAlpha(1);
-		debugDraw.SetFlags(b2DebugDraw.e_jointBit | b2DebugDraw.e_shapeBit);
-		this.world.SetDebugDraw(debugDraw);
+		if (!this.world) return;
+		if (!this.debugSprite)
+		{
+			this.debugSprite = new Sprite();
+			container.addChild(this.debugSprite);
+		}
+		if (!this.debugDraw)
+		{
+			this.debugDraw = new b2DebugDraw();
+			this.debugDraw.SetSprite(this.debugSprite);
+			this.debugDraw.SetLineThickness(.2);
+			this.debugDraw.SetDrawScale(CONVERSION);
+			this.debugDraw.SetAlpha(1);
+			//绘制模式 e_jointBit关节 e_shapeBit刚体 e_controllerBit碰撞组
+			this.debugDraw.SetFlags(b2DebugDraw.e_jointBit | b2DebugDraw.e_shapeBit | b2DebugDraw.e_controllerBit);
+			this.world.SetDebugDraw(this.debugDraw);
+		}
 	}
 	
 	/**
@@ -497,6 +691,8 @@ public class B2dShell
 	public function clearAll():void
 	{
 		this.world.ClearForces();
+		this.clearJointDict();
+		this.buoyancyController = null;
 		for (var bb:b2Body = this.world.GetBodyList(); bb; bb = bb.GetNext())
 		{
 			this.destroyBody(bb);
@@ -504,15 +700,39 @@ public class B2dShell
 	}
 	
 	/**
+	 * 清除待销毁关节的列表
+	 */
+	private function clearJointDict():void
+	{
+		if (!this.destroyJointDict) return;
+		for each (var body:b2Body in this.destroyJointDict) 
+		{
+			delete this.destroyJointDict[body];
+		}
+	}
+	
+	/**
 	 * 更新鼠标位置
 	 */
-	private function updataMousePostion():void
+	private function updateMousePostion():void
 	{
 		if (this.stage && this.mouseEnabled)
 		{
-			this.mouseXWorldPhys = this.stage.mouseX / conversion;
-			this.mouseYWorldPhys = this.stage.mouseY / conversion;
+			this.mouseXWorldPhys = this.stage.mouseX / CONVERSION;
+			this.mouseYWorldPhys = this.stage.mouseY / CONVERSION;
 		}
+	}
+	
+	/**
+	 * 设置线速度
+	 * @param	body  刚体
+	 * @param	vx    横向速度
+	 * @param	vy    纵向速度
+	 */
+	public function setLinearVelocity(body:b2Body, vx:Number, vy:Number):void
+	{
+		if (!body) return;
+		body.SetLinearVelocity(new b2Vec2(vx, vy)); 
 	}
 	
 	private function stageMouseDown(event:MouseEvent):void 
@@ -534,18 +754,27 @@ public class B2dShell
 		_timeStep = value;
 	}
 	
+	/**
+	 * 位置计算层级 
+	 */
 	public function get positionIterations():int { return _positionIterations; }
 	public function set positionIterations(value:int):void 
 	{
 		_positionIterations = value;
 	}
 	
+	/**
+	 * 速度计算层级 
+	 */
 	public function get velocityIterations():int { return _velocityIterations; }
 	public function set velocityIterations(value:int):void 
 	{
 		_velocityIterations = value;
 	}
 	
+	/**
+	 * 是否允许鼠标拖到
+	 */
 	public function get mouseEnabled():Boolean { return _mouseEnabled; }
 	public function set mouseEnabled(value:Boolean):void 
 	{
@@ -562,7 +791,19 @@ public class B2dShell
 		}
 	}
 	
+	/**
+	 * box2d世界
+	 */
 	public function get world():b2World { return _world; };
+	
+	/**
+	 * wrapAround范围
+	 */
+	public function get wrapAroundRange():Rectangle { return _wrapAroundRange; }
+	public function set wrapAroundRange(value:Rectangle):void 
+	{
+		_wrapAroundRange = value;
+	}
 	
 }
 }
