@@ -7,12 +7,15 @@ Thumbs.db
 /box2d/Docs/*
 /box2d/Examples/*
 /box2d/Contrib/*
-/box2d/Contrib/*
+/box2d/Contrib/*
 /html-template/*
 /bin-debug/*
 /bin-release/*
 /bin/*
 
+.swf
+.txt
+.png
 .actionScriptProperties
 .flexProperties
 .flexLibProperties
