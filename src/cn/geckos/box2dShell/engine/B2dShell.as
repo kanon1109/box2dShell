@@ -100,12 +100,13 @@ public class B2dShell
 	
 	/**
 	 * 创建一个边界
-	 * @param	left   左边界
-	 * @param	right  右边界
-	 * @param	top    上边界
-	 * @param	bottom 下边界
+	 * @param	left      左边界
+	 * @param	top       上边界
+	 * @param	right     右边界
+	 * @param	bottom    下边界
+	 * @param	thickness 厚度
 	 */
-	public function createOutSide(left:Number, right:Number, top:Number, bottom:Number):void
+	public function createOutSide(left:Number, top:Number, right:Number, bottom:Number, thickness:Number = 1):void
 	{
 		//上
 		var bodyData:PolyData = new PolyData();
@@ -113,28 +114,27 @@ public class B2dShell
 		bodyData.density = .1;
 		bodyData.friction = .1;
 		bodyData.restitution = .1;
-		bodyData.width = right - left;
-		bodyData.height = 5;
-		bodyData.postion = new Point(left + bodyData.width * .5, top - bodyData.height * .5);
+		bodyData.width = right - left + thickness * 2;
+		bodyData.height = thickness;
+		bodyData.postion = new Point(left + bodyData.width * .5 - thickness, top - bodyData.height * .5);
 		bodyData.boxPoint = new Point(bodyData.width * .5, bodyData.height * .5);
 		this.createPoly(bodyData);
 		//下
-		bodyData.width = right - left;
-		bodyData.height = 5;
-		bodyData.postion = new Point(left + bodyData.width * .5, bottom + bodyData.height * .5);
+		bodyData.width = right - left + thickness * 2;
+		bodyData.height = thickness;
+		bodyData.postion = new Point(left + bodyData.width * .5 - thickness, bottom + bodyData.height * .5);
 		this.createPoly(bodyData);
 		//左
-		bodyData.width = 5;
-		bodyData.height = bottom - top;
-		bodyData.postion = new Point(left - bodyData.width * .5, top + bodyData.height * .5);
+		bodyData.width = thickness;
+		bodyData.height = bottom - top + thickness * 2;
+		bodyData.postion = new Point(left - bodyData.width * .5, top + bodyData.height * .5 - thickness);
 		bodyData.boxPoint = new Point(bodyData.width * .5, bodyData.height * .5);
 		this.createPoly(bodyData);
 		//右
-		bodyData.width = 5;
-		bodyData.height = bottom - top;
-		bodyData.postion = new Point(right + bodyData.width * .5, top + bodyData.height * .5);
+		bodyData.width = thickness;
+		bodyData.height = bottom - top + thickness * 2;
+		bodyData.postion = new Point(right + bodyData.width * .5, top + bodyData.height * .5 - thickness);
 		this.createPoly(bodyData);
-		
 	}
 	
 	/**
