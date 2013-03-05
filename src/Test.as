@@ -50,6 +50,8 @@ public class Test extends Sprite
 		this.b2dShell.createPoly(polyData);
 		this.b2dShell.mouseEnabled = true;
 		
+		this.b2dShell.createOutSide(100, 110, 100, 130);
+		
 		stage.addEventListener(MouseEvent.CLICK, mouseClickHandler);
 		stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler);
 		this.addEventListener(Event.ENTER_FRAME, enterFrameHandler);

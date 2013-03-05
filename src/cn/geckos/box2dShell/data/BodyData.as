@@ -15,7 +15,7 @@ public class BodyData
 	protected var _density:Number = 0.0;
 	//弹性
 	protected var _restitution:Number = 0.0;
-	//位置
+	//刚体的坐标位置
 	protected var _postion:Point;
 	//容器
 	protected var _container:DisplayObjectContainer;
@@ -70,7 +70,7 @@ public class BodyData
 	}
 	
 	/**
-	 * 位置
+	 * 刚体的坐标位置 
 	 */
 	public function get postion():Point { return _postion; }
 	public function set postion(value:Point):void 

@@ -176,7 +176,6 @@ package cn.geckos.box2dShell.Box2DSeparator
 									dx = p2.x-v.x;
 									dy = p2.y-v.y;
 									t = dx*dx+dy*dy;
-									
 									if(t<minLen)
 									{
 										h = j1;
@@ -187,7 +186,6 @@ package cn.geckos.box2dShell.Box2DSeparator
 								}
 							}
 						}
-						
 						if(minLen==Number.MAX_VALUE) err();
 						
 						vec1 = new Vector.<b2Vec2>();
