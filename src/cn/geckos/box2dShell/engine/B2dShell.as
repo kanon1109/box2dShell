@@ -99,45 +99,6 @@ public class B2dShell
 	}
 	
 	/**
-	 * 创建一个边界
-	 * @param	left      左边界
-	 * @param	top       上边界
-	 * @param	right     右边界
-	 * @param	bottom    下边界
-	 * @param	thickness 厚度
-	 */
-	public function createOutSide(left:Number, top:Number, right:Number, bottom:Number, thickness:Number = 1):void
-	{
-		//上
-		var bodyData:PolyData = new PolyData();
-		bodyData.bodyType = b2Body.b2_staticBody;
-		bodyData.density = .1;
-		bodyData.friction = .1;
-		bodyData.restitution = .1;
-		bodyData.width = right - left + thickness * 2;
-		bodyData.height = thickness;
-		bodyData.postion = new Point(left + bodyData.width * .5 - thickness, top - bodyData.height * .5);
-		bodyData.boxPoint = new Point(bodyData.width * .5, bodyData.height * .5);
-		this.createPoly(bodyData);
-		//下
-		bodyData.width = right - left + thickness * 2;
-		bodyData.height = thickness;
-		bodyData.postion = new Point(left + bodyData.width * .5 - thickness, bottom + bodyData.height * .5);
-		this.createPoly(bodyData);
-		//左
-		bodyData.width = thickness;
-		bodyData.height = bottom - top + thickness * 2;
-		bodyData.postion = new Point(left - bodyData.width * .5, top + bodyData.height * .5 - thickness);
-		bodyData.boxPoint = new Point(bodyData.width * .5, bodyData.height * .5);
-		this.createPoly(bodyData);
-		//右
-		bodyData.width = thickness;
-		bodyData.height = bottom - top + thickness * 2;
-		bodyData.postion = new Point(right + bodyData.width * .5, top + bodyData.height * .5 - thickness);
-		this.createPoly(bodyData);
-	}
-	
-	/**
 	 * 清除世界
 	 */
 	public function clearWorld():void
@@ -336,6 +297,78 @@ public class B2dShell
 	}
 	
 	/**
+	 * 创建一个边界
+	 * @param	left      左边界
+	 * @param	top       上边界
+	 * @param	right     右边界
+	 * @param	bottom    下边界
+	 * @param	thickness 厚度
+	 */
+	public function createOutSide(left:Number, top:Number, right:Number, bottom:Number, thickness:Number = 1):void
+	{
+		//上
+		var bodyData:PolyData = new PolyData();
+		bodyData.bodyType = b2Body.b2_staticBody;
+		bodyData.density = .1;
+		bodyData.friction = .1;
+		bodyData.restitution = .1;
+		bodyData.width = right - left + thickness * 2;
+		bodyData.height = thickness;
+		bodyData.postion = new Point(left + bodyData.width * .5 - thickness, top - bodyData.height * .5);
+		bodyData.boxPoint = new Point(bodyData.width * .5, bodyData.height * .5);
+		this.createPoly(bodyData);
+		//下
+		bodyData.width = right - left + thickness * 2;
+		bodyData.height = thickness;
+		bodyData.postion = new Point(left + bodyData.width * .5 - thickness, bottom + bodyData.height * .5);
+		this.createPoly(bodyData);
+		//左
+		bodyData.width = thickness;
+		bodyData.height = bottom - top + thickness * 2;
+		bodyData.postion = new Point(left - bodyData.width * .5, top + bodyData.height * .5 - thickness);
+		bodyData.boxPoint = new Point(bodyData.width * .5, bodyData.height * .5);
+		this.createPoly(bodyData);
+		//右
+		bodyData.width = thickness;
+		bodyData.height = bottom - top + thickness * 2;
+		bodyData.postion = new Point(right + bodyData.width * .5, top + bodyData.height * .5 - thickness);
+		this.createPoly(bodyData);
+	}
+	
+	/**
+	 * 创建圆环刚体
+	 * @param	radius     环的半径
+	 * @param	x 		   环的中心点x坐标
+	 * @param	y		   环的中心点y坐标
+	 * @param	segmentNum 线段的数量
+	 */
+	public function createCircleGround(radius:Number, x:Number, y:Number, segmentNum:Number = 36):void
+	{
+		//根据半径和个数计算线段的长度
+		var round:Number = Math.PI * 2 * radius;
+		var segmentlength:Number = round / segmentNum;
+		for (var i:int = 1; i <= segmentNum; i += 1)
+		{
+			var bodyData:PolyData = new PolyData();
+			bodyData.density = .1;
+			bodyData.friction = .3;
+			bodyData.restitution = .2;
+			//计算每个线段的角度、坐标
+			var angle:Number = i / segmentNum * Math.PI * 2;
+			var bx:Number = radius * Math.cos(angle);
+			var by:Number = radius * Math.sin(angle);
+			bodyData.bodyType = b2Body.b2_staticBody;
+			bodyData.rotation = MathUtil.rds2dgs(angle);
+			bodyData.postion = new Point(bx + x, by + y);
+			bodyData.width = 5;
+			bodyData.height = segmentlength;
+			bodyData.boxPoint = new Point(bodyData.width * .5, bodyData.height * .5);
+			//创建有方向的矩形刚体，合成总的圆形刚体
+			this.createPoly(bodyData);
+		}
+	}
+	
+	/**
 	 * 渲染
 	 */
 	public function render():void
@@ -363,8 +396,8 @@ public class B2dShell
 	}
 	
 	/**
-	 * 设置刚体环绕屏幕
-	 * @param	body    	需要环绕的刚体
+	 * 设置刚体穿透屏幕
+	 * @param	body    	需要穿透屏幕的刚体
 	 * @param	range   	运动范围
 	 */
 	private function bodyWrapAround(body:b2Body, range:Rectangle):void

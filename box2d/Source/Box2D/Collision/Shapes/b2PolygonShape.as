@@ -292,17 +292,11 @@ public class b2PolygonShape extends b2Shape
 		var tVec:b2Vec2;
 		
 		//b2Vec2 pLocal = b2MulT(xf.R, p - xf.position);
-		trace("xf", xf);
-		trace("xf.position", xf.position);
-		trace("xf.R",xf.R);
-		trace("p",p);
-		trace(p.x, p.y);
 		var tMat:b2Mat22 = xf.R;
 		var tX:Number = p.x - xf.position.x;
 		var tY:Number = p.y - xf.position.y;
 		var pLocalX:Number = (tX*tMat.col1.x + tY*tMat.col1.y);
 		var pLocalY:Number = (tX*tMat.col2.x + tY*tMat.col2.y);
-		trace("ININ")
 		for (var i:int = 0; i < m_vertexCount; ++i)
 		{
 			//float32 dot = b2Dot(m_normals[i], pLocal - m_vertices[i]);

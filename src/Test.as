@@ -51,7 +51,8 @@ public class Test extends Sprite
 		this.b2dShell.mouseEnabled = true;
 		
 		//this.b2dShell.createOutSide(100, 100, 110, 130, 1);
-		this.b2dShell.createOutSide(0, 0, 550, 400, 30);
+		//this.b2dShell.createOutSide(0, 0, 550, 400, 30);
+		this.b2dShell.createCircleGround(150, stage.stageWidth * .5, stage.stageHeight * .5 , 36);
 		
 		stage.addEventListener(MouseEvent.CLICK, mouseClickHandler);
 		stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler);
@@ -72,6 +73,7 @@ public class Test extends Sprite
 			var o:DisplayObject = arr[i];
 			this.addChild(o);
 		}
+		this.createRect(mouseX, mouseY);
 		//去掉注释你将看到Box2dParser解析的this.b2dShell数据
 		//trace(Box2dParser.encode(this.b2dShell));
 	}
@@ -112,12 +114,12 @@ public class Test extends Sprite
 	 * 使用shell创建的刚体对象
 	 * @return
 	 */
-	private function createRect():b2Body
+	private function createRect(x:Number, y:Number):b2Body
 	{
 		this.boxMc = new Box();
 		this.addChild(this.boxMc);
-		this.boxMc.x = Math.random() * stage.stageWidth;
-		this.boxMc.y = Math.random() * stage.stageHeight;
+		this.boxMc.x = x;
+		this.boxMc.y = y;
 		var polyData:PolyData = new PolyData();
 		polyData.container = this;
 		polyData.friction = 1;
