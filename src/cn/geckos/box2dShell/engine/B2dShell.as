@@ -74,6 +74,8 @@ public class B2dShell
 	private var debugDraw:b2DebugDraw;
 	//wrapAround范围
 	private var _wrapAroundRange:Rectangle;
+	//线段验证
+	private var separator:b2Separator;
 	public function B2dShell()
 	{
 		this.bodyDef = new b2BodyDef();
@@ -366,6 +368,99 @@ public class B2dShell
 			//创建有方向的矩形刚体，合成总的圆形刚体
 			this.createPoly(bodyData);
 		}
+	}
+	
+	/**
+	 * 验证多边形顶点是否合法
+	 * @param	pathList  路径列表
+	 * @return	Object    是否成功的对象存放路径列表
+	 */
+	public function validatePolygon(pathList:Vector.<Point>):Object
+	{
+		if (!pathList) return { "success":0 };
+		var sizeObj:Object = this.mathSizeByPath(pathList);
+		var length:int = pathList.length;
+		var b2Vec2Vector:Vector.<b2Vec2> = new Vector.<b2Vec2>();
+		for (var i:int = 0; i < length; i += 1) 
+		{
+			var x:Number = pathList[i].x / 30;
+			var y:Number = pathList[i].y / 30;
+			var b2:b2Vec2 = new b2Vec2(x, y);
+			b2Vec2Vector.push(b2);
+		}
+		if (!this.separator)
+			this.separator = new b2Separator();
+		var status:int = this.separator.Validate(b2Vec2Vector);
+		var o:Object;
+		if (status == 2)
+		{
+			//不能为逆时针
+			pathList.reverse();
+			o = { "success":1, 
+				  "polygonList":pathList, 
+				  "width":sizeObj.width, 
+				  "height":sizeObj.height, 
+				  "minX":sizeObj.minX, "maxX":sizeObj.maxX,
+				  "minY":sizeObj.minY, "maxY":sizeObj.maxY };
+		}
+		else if (status != 0)
+		{
+			//不合法 有交叉
+			o = { "success":0 };
+		}
+		else
+		{
+			//成功
+			o = { "success":1, 
+				  "polygonList":pathList, 
+				  "width":sizeObj.width, 
+				  "height":sizeObj.height, 
+				  "minX":sizeObj.minX, "maxX":sizeObj.maxX,
+				  "minY":sizeObj.minY, "maxY":sizeObj.maxY };
+		}
+		return o;
+	}
+	
+	/**
+	 * 根据坐标计算这个坐标形成的图形的尺寸高宽
+	 * @param	path 路径列表
+	 * @return  尺寸对象
+	 */
+	public function mathSizeByPath(path:Vector.<Point>):Object
+	{
+		var length:int = path.length;
+		var minX:Number;
+		var maxX:Number;
+		var minY:Number;
+		var maxY:Number;
+		for (var i:int = 0; i < length; i += 1) 
+		{
+			var pos:Point = path[i];
+			if (isNaN(minX))
+				minX = pos.x;
+			if (pos.x < minX)
+				minX = pos.x;
+				
+			if (isNaN(maxX))
+				maxX = pos.x;
+			if (pos.x > maxX)
+				maxX = pos.x;
+				
+			if (isNaN(minY))
+				minY = pos.y;
+			if (pos.y < minY)
+				minY = pos.y;
+				
+			if (isNaN(maxY))
+				maxY = pos.y;
+			if (pos.y > maxY)
+				maxY = pos.y;
+		}
+		var width:Number = maxX - minX;
+		var height:Number = maxY - minY;
+		return { "width":width, "height":height, 
+				 "minX":minX, "maxX":maxX,
+				 "minY":minY, "maxY":maxY };
 	}
 	
 	/**
