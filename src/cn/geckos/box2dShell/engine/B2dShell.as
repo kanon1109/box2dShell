@@ -383,41 +383,34 @@ public class B2dShell
 		var b2Vec2Vector:Vector.<b2Vec2> = new Vector.<b2Vec2>();
 		for (var i:int = 0; i < length; i += 1) 
 		{
-			var x:Number = pathList[i].x / 30;
-			var y:Number = pathList[i].y / 30;
+			var pos:Point = pathList[i];
+			var x:Number = pos.x / B2dShell.CONVERSION;
+			var y:Number = pos.y / B2dShell.CONVERSION;
 			var b2:b2Vec2 = new b2Vec2(x, y);
 			b2Vec2Vector.push(b2);
 		}
 		if (!this.separator)
 			this.separator = new b2Separator();
 		var status:int = this.separator.Validate(b2Vec2Vector);
+		trace("status", status);
 		var o:Object;
 		if (status == 2)
 		{
 			//不能为逆时针
 			pathList.reverse();
-			o = { "success":1, 
-				  "polygonList":pathList, 
-				  "width":sizeObj.width, 
-				  "height":sizeObj.height, 
-				  "minX":sizeObj.minX, "maxX":sizeObj.maxX,
-				  "minY":sizeObj.minY, "maxY":sizeObj.maxY };
 		}
 		else if (status != 0)
 		{
 			//不合法 有交叉
 			o = { "success":0 };
+			return o;
 		}
-		else
-		{
-			//成功
-			o = { "success":1, 
-				  "polygonList":pathList, 
-				  "width":sizeObj.width, 
-				  "height":sizeObj.height, 
-				  "minX":sizeObj.minX, "maxX":sizeObj.maxX,
-				  "minY":sizeObj.minY, "maxY":sizeObj.maxY };
-		}
+		//成功
+		o = { "success":1, 
+			  "width":sizeObj.width, 
+			  "height":sizeObj.height, 
+			  "minX":sizeObj.minX, "maxX":sizeObj.maxX,
+			  "minY":sizeObj.minY, "maxY":sizeObj.maxY };
 		return o;
 	}
 	
@@ -428,36 +421,36 @@ public class B2dShell
 	 */
 	public function mathSizeByPath(path:Vector.<Point>):Object
 	{
-		var length:int = path.length;
 		var minX:Number;
 		var maxX:Number;
 		var minY:Number;
 		var maxY:Number;
+		var length:int = path.length;
 		for (var i:int = 0; i < length; i += 1) 
 		{
 			var pos:Point = path[i];
 			if (isNaN(minX))
 				minX = pos.x;
-			if (pos.x < minX)
+			else if (pos.x < minX)
 				minX = pos.x;
 				
 			if (isNaN(maxX))
 				maxX = pos.x;
-			if (pos.x > maxX)
+			else if (pos.x > maxX)
 				maxX = pos.x;
 				
 			if (isNaN(minY))
 				minY = pos.y;
-			if (pos.y < minY)
+			else if (pos.y < minY)
 				minY = pos.y;
 				
 			if (isNaN(maxY))
 				maxY = pos.y;
-			if (pos.y > maxY)
+			else if (pos.y > maxY)
 				maxY = pos.y;
 		}
-		var width:Number = maxX - minX;
-		var height:Number = maxY - minY;
+		var width:Number = (maxX - minX);
+		var height:Number = (maxY - minY);
 		return { "width":width, "height":height, 
 				 "minX":minX, "maxX":maxX,
 				 "minY":minY, "maxY":maxY };

@@ -3,6 +3,7 @@ package cn.geckos.box2dShell.plugs
 import Box2D.Dynamics.b2Body;
 import cn.geckos.box2dShell.data.PolyData;
 import cn.geckos.box2dShell.engine.B2dShell;
+import cn.geckos.utils.TraceUtil;
 import flash.display.DisplayObjectContainer;
 import flash.display.Sprite;
 import flash.display.Stage;
@@ -26,6 +27,8 @@ public class DrawPolygon
 	private var prevPoint:Point;
 	//起始位置
 	private var curPoint:Point;
+	//起始坐标
+	private var startPoint:Point;
 	//是否按下鼠标
 	private var isDown:Boolean;
 	//最小绘制距离
@@ -34,12 +37,15 @@ public class DrawPolygon
 	private var _lineColor:Number;
 	//线条粗细
 	private var _thickness:Number;
+	//线条合并时最小的距离
+	private var combineMinDistance:int;
 	public function DrawPolygon(parent:DisplayObjectContainer, 
 								drawContainer:Sprite) 
 	{
 		this.parent = parent;
 		this.drawContainer = drawContainer;
-		this.minDrawDistance = 5;
+		this.combineMinDistance = 5;
+		this.minDrawDistance = 40;
 		this.lineColor = 0xFF0000;
 		this.thickness = 2;
 		this.pathList = new Vector.<Point>();
@@ -66,7 +72,7 @@ public class DrawPolygon
 		{
 			var arr:Array = [];
 			var length:int = this.pathList.length;
-			for (var i:int = 0; i < length; i += 1) 
+			for (var i:int = 0; i < length; i += 1)
 			{
 				var pos:Point = this.pathList[i];
 				arr.push([pos.x, pos.y]);
@@ -94,10 +100,20 @@ public class DrawPolygon
 			this.curPoint.y = this.parent.mouseY;
 			if (this.checkDrawDis(this.prevPoint, this.curPoint, this.minDrawDistance))
 			{
-				this.pathList.push(this.curPoint);
+				//需要this.curPoint的clone对象。
+				this.pathList.push(this.curPoint.clone());
 				this.prevPoint.x = this.parent.mouseX;
 				this.prevPoint.y = this.parent.mouseY;
 				this.drawContainer.graphics.lineTo(this.curPoint.x, this.curPoint.y);
+			}
+			//如果鼠标移动到了 线条的起始位置时，则自动合并这个图形。
+			if (this.pathList.length >= 2)
+			{
+				if (Point.distance(this.curPoint, this.startPoint) <= this.combineMinDistance)
+				{
+					this.parent.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHandler);
+					this.drawContainer.graphics.lineTo(this.startPoint.x, this.startPoint.y);
+				}
 			}
 		}
 	}
@@ -109,6 +125,7 @@ public class DrawPolygon
 		this.drawContainer.graphics.clear();
 		this.prevPoint.x = this.parent.mouseX;
 		this.prevPoint.y = this.parent.mouseY;
+		this.startPoint = this.prevPoint.clone();
 		this.pathList.push(this.prevPoint);
 		this.drawContainer.graphics.lineStyle(this.thickness, this.lineColor);
 		this.drawContainer.graphics.moveTo(this.prevPoint.x, this.prevPoint.y);
@@ -155,9 +172,16 @@ public class DrawPolygon
 	 */
 	public function destory():void
 	{
-		this.parent.removeEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler);
-		this.parent.removeEventListener(MouseEvent.MOUSE_UP, mouseUpHandler);
-		this.parent = null;
+		if (this.parent)
+		{
+			this.parent.removeEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler);
+			this.parent.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHandler);
+			this.parent.removeEventListener(MouseEvent.MOUSE_UP, mouseUpHandler);
+			this.parent = null;
+		}
+		this.startPoint = null;
+		this.curPoint = null;
+		this.prevPoint = null;
 		this.clear();
 		this.drawContainer = null;
 		this.pathList = null;

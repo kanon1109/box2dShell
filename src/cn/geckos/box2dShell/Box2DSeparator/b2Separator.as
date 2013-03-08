@@ -86,40 +86,39 @@ package cn.geckos.box2dShell.Box2DSeparator
 			var i:int, n:int = verticesVec.length, j:int, j2:int, i2:int, i3:int, d:Number, ret:int = 0;
 			var fl:Boolean, fl2:Boolean = false;
 			
-			for(i=0; i<n; i++)
+			for (i = 0; i < n; i += 1)
 			{
-				i2 = (i<n-1?i+1:0);
-				i3 = (i>0?i-1:n-1);
+				i2 = (i < n - 1?i + 1:0);
+				i3 = (i > 0?i - 1:n - 1);
 				
 				fl = false;
-				for(j=0; j<n; j++)
+				for (j = 0; j < n; j += 1)
 				{
 					if(j!=i&&j!=i2)
 					{
 						if(!fl)
 						{
 							d = det(verticesVec[i].x, verticesVec[i].y, verticesVec[i2].x, verticesVec[i2].y, verticesVec[j].x, verticesVec[j].y);
-							if(d>0) fl = true;
+							if (d > 0) 
+								fl = true;
 						}
 						
 						if(j!=i3)
 						{
-							j2 = (j<n-1?j+1:0);
+							j2 = (j < n - 1?j + 1:0);
 							if(hitSegment(verticesVec[i].x, verticesVec[i].y, verticesVec[i2].x, verticesVec[i2].y, verticesVec[j].x, verticesVec[j].y, verticesVec[j2].x, verticesVec[j2].y))
 								ret = 1;
 						}
 					}
 				}
-				
-				if(!fl) fl2 = true;			
+				if (!fl)
+					fl2 = true;			
 			}
-			
 			if(fl2)
 			{
-				if(ret==1) ret = 3;
+				if (ret == 1) ret = 3;
 				else ret = 2;
 			}
-			
 			return ret;
 		}
 		
@@ -268,12 +267,12 @@ package cn.geckos.box2dShell.Box2DSeparator
 			var t1:Number = x3-x1, t2:Number = y3-y1, t3:Number = x2-x1, t4:Number = y2-y1, 
 				t5:Number = x4-x3, t6:Number = y4-y3, t7:Number = t4*t5-t3*t6, a:Number;
 			
-			a = (t5*t2-t6*t1)/t7;
-			var px:Number = x1+a*t3, py:Number = y1+a*t4;
+			a = (t5 * t2 - t6 * t1) / t7;
+			var px:Number = x1 + a * t3, py:Number = y1 + a * t4;
 			var b1:Boolean = isOnSegment(px, py, x1, y1, x2, y2);
 			var b2:Boolean = isOnSegment(px, py, x3, y3, x4, y4);
 			
-			if(b1&&b2) return new b2Vec2(px, py);
+			if (b1 && b2) return new b2Vec2(px, py);
 			
 			return null;
 		}
