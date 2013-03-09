@@ -1,8 +1,12 @@
 package cn.geckos.box2dShell.plugs 
 {
+import Box2D.Common.Math.b2Vec2;
 import Box2D.Dynamics.b2Body;
+import Box2D.Dynamics.Joints.b2WeldJointDef;
 import cn.geckos.box2dShell.data.PolyData;
 import cn.geckos.box2dShell.engine.B2dShell;
+import cn.geckos.geom.Vector2D;
+import cn.geckos.utils.ArrayUtil;
 import flash.display.DisplayObjectContainer;
 import flash.display.Sprite;
 import flash.events.MouseEvent;
@@ -18,7 +22,7 @@ public class DrawPolygon
 	//接受鼠标事件的容器
 	private var parent:DisplayObjectContainer;
 	//路径列表
-	private var pathList:Vector.<Point>;
+	private var pathList:Array;
 	//外部容器对象
 	private var _b2dShell:B2dShell;
 	//上一个点的位置
@@ -46,7 +50,7 @@ public class DrawPolygon
 		this.minDrawDistance = 40;
 		this.lineColor = 0xFF0000;
 		this.thickness = 2;
-		this.pathList = new Vector.<Point>();
+		this.pathList = [];
 		this.prevPoint = new Point();
 		this.curPoint = new Point();
 		this.initEvent();
@@ -71,18 +75,11 @@ public class DrawPolygon
 			//如果验证成功则创建刚体
 			if (o.success == 1)
 			{
-				var arr:Array = [];
-				var length:int = this.pathList.length;
-				for (var i:int = 0; i < length; i += 1)
-				{
-					var pos:Point = this.pathList[i];
-					arr.push([pos.x, pos.y]);
-				}
 				var bodyData:PolyData = new PolyData();
 				bodyData.density = .1;
-				bodyData.friction = .2;
+				bodyData.friction = .1;
 				bodyData.restitution = .1;
-				bodyData.vertices = arr;
+				bodyData.vertices = this.pathList;
 				bodyData.width = o.width;
 				bodyData.height = o.height;
 				bodyData.postion = new Point(0, 0);
@@ -91,7 +88,58 @@ public class DrawPolygon
 				this.b2dShell.createPoly(bodyData);
 			}
 		}
+		else
+		{
+			this.createPathLine(this.pathList);
+		}
 		this.clear();
+	}
+	
+	/**
+	 * 创建点绘制的路径地板
+	 * @param	pathList 路径列表
+	 */
+	private function createPathLine(pathList:Array):void
+	{
+		var length:int = pathList.length - 1;
+		for (var i:int = 0; i < length; i += 1) 
+		{
+			//参考www.emanueleferonato.com/2013/01/10/way-of-an-idea-prototype-updated-to-box2d-2-1a-and-nape/
+			//先线段的 0，1，2，3分成一个规律的组合，0，1分别为上一次鼠标坐标，2，3为当前鼠标坐标。
+			var sx:int = pathList[i][0];
+			var sy:int = pathList[i][1];
+			var ex:int = pathList[i + 1][0]
+			var ey:int = pathList[i + 1][1];
+			var v2d:Vector2D = new Vector2D(sx, sy);
+			var dist:Number = v2d.dist(new Vector2D(ex, ey));
+			var angle:Number = v2d.angleBetween(new Vector2D(ex, ey), false);
+			this.createLinePolygonBody((sx + ex) * .5, (sy + ey) * .5, dist, 4, angle);
+		}
+	}
+	
+	/**
+	 * 创建路径地板的多边形刚体
+	 * @param	pX    x位置
+	 * @param	pY    y位置
+	 * @param	w     宽度
+	 * @param	h     高度
+	 * @param	angle 角度
+	 */
+	private function createLinePolygonBody(pX:Number, pY:Number, width:Number, height:Number, angle:Number):b2Body
+	{
+		var polyData:PolyData = new PolyData();
+		polyData.friction = .1;
+		polyData.density = .1;
+		polyData.restitution = .1;
+		polyData.bodyLabel = "floor";
+		polyData.boxPoint = new Point(width * .5, height * .5);
+		polyData.width = width;
+		polyData.height = height;
+		polyData.postion = new Point(pX, pY);
+		polyData.bodyType = b2Body.b2_dynamicBody;
+		var body:b2Body = this.b2dShell.createPoly(polyData);
+		body.SetAngle(angle);
+		return body;
 	}
 	
 	private function mouseMoveHandler(event:MouseEvent):void 
@@ -100,13 +148,12 @@ public class DrawPolygon
 		{
 			this.curPoint.x = this.parent.mouseX;
 			this.curPoint.y = this.parent.mouseY;
+			this.drawContainer.graphics.lineTo(this.curPoint.x, this.curPoint.y);
 			if (this.checkDrawDis(this.prevPoint, this.curPoint, this.minDrawDistance))
 			{
-				//需要this.curPoint的clone对象。
-				this.pathList.push(this.curPoint.clone());
+				this.pathList.push([this.curPoint.x, this.curPoint.y]);
 				this.prevPoint.x = this.parent.mouseX;
 				this.prevPoint.y = this.parent.mouseY;
-				this.drawContainer.graphics.lineTo(this.curPoint.x, this.curPoint.y);
 			}
 			//如果鼠标移动到了 线条的起始位置时，则自动合并这个图形。
 			if (this.pathList.length >= 2)
@@ -129,7 +176,7 @@ public class DrawPolygon
 		this.prevPoint.y = this.parent.mouseY;
 		this.startPoint = this.prevPoint.clone();
 		//不能直接保存prevPoint 因为prevPoint会根据鼠标的距离改变。
-		this.pathList.push(this.startPoint);
+		this.pathList.push([this.prevPoint.x, this.prevPoint.y]);
 		this.drawContainer.graphics.lineStyle(this.thickness, this.lineColor);
 		this.drawContainer.graphics.moveTo(this.prevPoint.x, this.prevPoint.y);
 	}
@@ -149,25 +196,12 @@ public class DrawPolygon
 	}
 	
 	/**
-	 * 销毁路径列表
-	 */
-	private function removePathList(vector:Vector.<Point>):void
-	{
-		if (!vector) return;
-		var length:int = vector.length;
-		for (var i:int = length - 1; i >= 0 ; i -= 1) 
-		{
-			vector.splice(i, 1);
-		}
-	}
-	
-	/**
 	 * 清除
 	 */
 	public function clear():void
 	{
 		this.drawContainer.graphics.clear();
-		this.removePathList(this.pathList);
+		ArrayUtil.clearList(this.pathList);
 	}
 	
 	/**

@@ -76,20 +76,8 @@ public class LineFloor extends EventDispatcher
 		if (this.lineFloorMode && this.drawSprite)
 		{
 			this.stage.removeEventListener(MouseEvent.MOUSE_MOVE, stageMouseMoveHandler);
-			var length:int = this.pointsList.length / 2 - 1;
-			for (var i:int = 0; i < length; i += 1) 
-			{
-				//参考www.emanueleferonato.com/2013/01/10/way-of-an-idea-prototype-updated-to-box2d-2-1a-and-nape/
-				//先线段的 0，1，2，3分成一个规律的组合，0，1分别为上一次鼠标坐标，2，3为当前鼠标坐标。
-				var sx:int = this.pointsList[i * 2];
-				var sy:int = this.pointsList[i * 2 + 1];
-				var ex:int = this.pointsList[i * 2 + 2];
-				var ey:int = this.pointsList[i * 2 + 3];
-				var v2d:Vector2D = new Vector2D(sx, sy);
-				var dist:Number = v2d.dist(new Vector2D(ex, ey));
-				var angle:Number = v2d.angleBetween(new Vector2D(ex, ey), false);
-				this.createPathFloor((sx + ex) * .5, (sy + ey) * .5, dist, 4, angle);
-			}
+			//创建点绘制的路径地板
+			this.createPathFloor(this.pointsList);
 			this.drawSprite.graphics.clear();
 			ArrayUtil.clearList(this.pointsList);
 			this.pointsList = null;
@@ -118,14 +106,36 @@ public class LineFloor extends EventDispatcher
 	}
 	
 	/**
-	 * 创建路径地板
-	 * @param	pX  x位置
-	 * @param	pY  y位置
-	 * @param	w   宽度
-	 * @param	h   高度
-	 * @param	angle
+	 * 创建点绘制的路径地板
+	 * @param	pathList 路径列表
 	 */
-	private function createPathFloor(pX:Number, pY:Number, width:Number, height:Number, angle:Number):void
+	private function createPathFloor(pathList:Array):void
+	{
+		var length:int = pathList.length / 2 - 1;
+		for (var i:int = 0; i < length; i += 1) 
+		{
+			//参考www.emanueleferonato.com/2013/01/10/way-of-an-idea-prototype-updated-to-box2d-2-1a-and-nape/
+			//先线段的 0，1，2，3分成一个规律的组合，0，1分别为上一次鼠标坐标，2，3为当前鼠标坐标。
+			var sx:int = pathList[i * 2];
+			var sy:int = pathList[i * 2 + 1];
+			var ex:int = pathList[i * 2 + 2];
+			var ey:int = pathList[i * 2 + 3];
+			var v2d:Vector2D = new Vector2D(sx, sy);
+			var dist:Number = v2d.dist(new Vector2D(ex, ey));
+			var angle:Number = v2d.angleBetween(new Vector2D(ex, ey), false);
+			this.createFloorPolygonBody((sx + ex) * .5, (sy + ey) * .5, dist, 4, angle);
+		}
+	}
+	
+	/**
+	 * 创建路径地板的多边形刚体
+	 * @param	pX    x位置
+	 * @param	pY    y位置
+	 * @param	w     宽度
+	 * @param	h     高度
+	 * @param	angle 角度
+	 */
+	private function createFloorPolygonBody(pX:Number, pY:Number, width:Number, height:Number, angle:Number):b2Body
 	{
 		var polyData:PolyData = new PolyData();
 		polyData.container = stage;
@@ -140,6 +150,7 @@ public class LineFloor extends EventDispatcher
 		polyData.bodyType = b2Body.b2_staticBody;
 		var body:b2Body = this.b2dShell.createPoly(polyData);
 		body.SetAngle(angle);
+		return body;
 	}
 	
 	/**

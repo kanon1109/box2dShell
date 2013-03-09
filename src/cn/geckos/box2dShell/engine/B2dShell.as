@@ -375,7 +375,7 @@ public class B2dShell
 	 * @param	pathList  路径列表
 	 * @return	Object    是否成功的对象存放路径列表
 	 */
-	public function validatePolygon(pathList:Vector.<Point>):Object
+	public function validatePolygon(pathList:Array):Object
 	{
 		if (!pathList) return { "success":0 };
 		var sizeObj:Object = this.mathSizeByPath(pathList);
@@ -383,10 +383,10 @@ public class B2dShell
 		var b2Vec2Vector:Vector.<b2Vec2> = new Vector.<b2Vec2>();
 		for (var i:int = 0; i < length; i += 1)
 		{
-			var pos:Point = pathList[i];
-			var x:Number = pos.x / B2dShell.CONVERSION;
-			var y:Number = pos.y / B2dShell.CONVERSION;
-			var b2:b2Vec2 = new b2Vec2(x, y);
+			var posX:Number = pathList[i][0];
+			var posY:Number = pathList[i][1];
+			var b2:b2Vec2 = new b2Vec2(posX / B2dShell.CONVERSION, 
+									   posY / B2dShell.CONVERSION);
 			b2Vec2Vector.push(b2);
 		}
 		if (!this.separator)
@@ -418,7 +418,7 @@ public class B2dShell
 	 * @param	path 路径列表
 	 * @return  尺寸对象
 	 */
-	public function mathSizeByPath(path:Vector.<Point>):Object
+	public function mathSizeByPath(path:Array):Object
 	{
 		var minX:Number;
 		var maxX:Number;
@@ -427,26 +427,27 @@ public class B2dShell
 		var length:int = path.length;
 		for (var i:int = 0; i < length; i += 1) 
 		{
-			var pos:Point = path[i];
+			var posX:Number = path[i][0];
+			var posY:Number = path[i][1];
 			if (isNaN(minX))
-				minX = pos.x;
-			else if (pos.x < minX)
-				minX = pos.x;
+				minX = posX;
+			else if (posX < minX)
+				minX = posX;
 				
 			if (isNaN(maxX))
-				maxX = pos.x;
-			else if (pos.x > maxX)
-				maxX = pos.x;
+				maxX = posX;
+			else if (posX > maxX)
+				maxX = posX;
 				
 			if (isNaN(minY))
-				minY = pos.y;
-			else if (pos.y < minY)
-				minY = pos.y;
+				minY = posY;
+			else if (posY < minY)
+				minY = posY;
 				
 			if (isNaN(maxY))
-				maxY = pos.y;
-			else if (pos.y > maxY)
-				maxY = pos.y;
+				maxY = posY;
+			else if (posY > maxY)
+				maxY = posY;
 		}
 		var width:Number = (maxX - minX);
 		var height:Number = (maxY - minY);
