@@ -3,10 +3,8 @@ package cn.geckos.box2dShell.plugs
 import Box2D.Dynamics.b2Body;
 import cn.geckos.box2dShell.data.PolyData;
 import cn.geckos.box2dShell.engine.B2dShell;
-import cn.geckos.utils.TraceUtil;
 import flash.display.DisplayObjectContainer;
 import flash.display.Sprite;
-import flash.display.Stage;
 import flash.events.MouseEvent;
 import flash.geom.Point;
 /**
@@ -67,27 +65,31 @@ public class DrawPolygon
 	{
 		this.isDown = false;
 		this.parent.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHandler);
-		var o:Object = this.b2dShell.validatePolygon(this.pathList);
-		if (o.success == 1)
+		if (this.pathList.length >= 3)
 		{
-			var arr:Array = [];
-			var length:int = this.pathList.length;
-			for (var i:int = 0; i < length; i += 1)
+			var o:Object = this.b2dShell.validatePolygon(this.pathList);
+			//如果验证成功则创建刚体
+			if (o.success == 1)
 			{
-				var pos:Point = this.pathList[i];
-				arr.push([pos.x, pos.y]);
+				var arr:Array = [];
+				var length:int = this.pathList.length;
+				for (var i:int = 0; i < length; i += 1)
+				{
+					var pos:Point = this.pathList[i];
+					arr.push([pos.x, pos.y]);
+				}
+				var bodyData:PolyData = new PolyData();
+				bodyData.density = .1;
+				bodyData.friction = .2;
+				bodyData.restitution = .1;
+				bodyData.vertices = arr;
+				bodyData.width = o.width;
+				bodyData.height = o.height;
+				bodyData.postion = new Point(0, 0);
+				bodyData.boxPoint = new Point(bodyData.width * .5, bodyData.height * .5);
+				bodyData.bodyType = b2Body.b2_dynamicBody;
+				this.b2dShell.createPoly(bodyData);
 			}
-			var bodyData:PolyData = new PolyData();
-			bodyData.density = .1;
-			bodyData.restitution = .1;
-			bodyData.friction = .2;
-			bodyData.vertices = arr;
-			bodyData.width = o.width;
-			bodyData.height = o.height;
-			bodyData.postion = new Point(bodyData.width * .5 + o.minX, bodyData.height * .5 + o.minY);
-			bodyData.boxPoint = new Point(bodyData.width * .5, bodyData.height * .5);
-			bodyData.bodyType = b2Body.b2_dynamicBody;
-			this.b2dShell.createPoly(bodyData);
 		}
 		this.clear();
 	}
@@ -126,7 +128,8 @@ public class DrawPolygon
 		this.prevPoint.x = this.parent.mouseX;
 		this.prevPoint.y = this.parent.mouseY;
 		this.startPoint = this.prevPoint.clone();
-		this.pathList.push(this.prevPoint);
+		//不能直接保存prevPoint 因为prevPoint会根据鼠标的距离改变。
+		this.pathList.push(this.startPoint);
 		this.drawContainer.graphics.lineStyle(this.thickness, this.lineColor);
 		this.drawContainer.graphics.moveTo(this.prevPoint.x, this.prevPoint.y);
 	}
@@ -170,7 +173,7 @@ public class DrawPolygon
 	/**
 	 * 销毁
 	 */
-	public function destory():void
+	public function destroy():void
 	{
 		if (this.parent)
 		{

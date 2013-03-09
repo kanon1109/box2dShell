@@ -172,7 +172,7 @@ public class LineFloor extends EventDispatcher
 	/**
 	 * 销毁
 	 */
-	public function destory():void
+	public function destroy():void
 	{
 		ArrayUtil.clearList(this.pointsList);
 		this.pointsList = null;

@@ -381,7 +381,7 @@ public class B2dShell
 		var sizeObj:Object = this.mathSizeByPath(pathList);
 		var length:int = pathList.length;
 		var b2Vec2Vector:Vector.<b2Vec2> = new Vector.<b2Vec2>();
-		for (var i:int = 0; i < length; i += 1) 
+		for (var i:int = 0; i < length; i += 1)
 		{
 			var pos:Point = pathList[i];
 			var x:Number = pos.x / B2dShell.CONVERSION;
@@ -392,7 +392,6 @@ public class B2dShell
 		if (!this.separator)
 			this.separator = new b2Separator();
 		var status:int = this.separator.Validate(b2Vec2Vector);
-		trace("status", status);
 		var o:Object;
 		if (status == 2)
 		{

@@ -44,7 +44,7 @@ public class LineFloorTest extends Sprite
 			case Keyboard.D:
 					//销毁有显示对象装饰的刚体 box2d的debug显示对象除外
 					this.b2dShell.destroyBody(this.b2dShell.getBodyByPostion(mouseX, mouseY));
-					this.lineFloor.destory();
+					this.lineFloor.destroy();
 					this.lineFloor = null;
 				break;
 		}

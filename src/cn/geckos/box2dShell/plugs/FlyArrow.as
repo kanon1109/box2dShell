@@ -190,7 +190,7 @@ public class FlyArrow
 	/**
 	 * 销毁所有箭头
 	 */
-	public function destoryAllArrow():void
+	public function destroyAllArrow():void
 	{
 		if (!this.b2dShell) return;
 		for (var body:b2Body = this.b2dShell.world.GetBodyList(); body; body = body.GetNext())
@@ -217,9 +217,9 @@ public class FlyArrow
 	/**
 	 * 销毁整个插件
 	 */
-	public function destory():void
+	public function destroy():void
 	{
-		this.destoryAllArrow();
+		this.destroyAllArrow();
 		this.arrowDict = null;
 		this.contactDict = null;
 		this._b2dShell = null;

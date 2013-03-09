@@ -110,7 +110,7 @@ public class FlyArrowTest extends Sprite
 					//this.arrow = new Arrow();
 					//this.addChild(this.arrow);
 					//trace("keyDownHandler")
-					this.flyArrow.destoryAllArrow();
+					this.flyArrow.destroyAllArrow();
 				break;
 		}
 	}
