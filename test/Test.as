@@ -7,13 +7,18 @@ import cn.geckos.box2dShell.data.CircleData;
 import cn.geckos.box2dShell.data.PolyData;
 import cn.geckos.box2dShell.engine.B2dShell;
 import cn.geckos.box2dShell.engine.Box2dParser;
+import cn.geckos.utils.DisplayObjectUtil;
+import cn.geckos.utils.Random;
+import flash.display.BitmapData;
 import flash.display.DisplayObject;
+import flash.display.GraphicsPathCommand;
 import flash.display.Sprite;
 import flash.events.Event;
 import flash.events.KeyboardEvent;
 import flash.events.MouseEvent;
 import flash.geom.Point;
 import flash.ui.Keyboard;
+import flash.utils.getDefinitionByName;
 /**
  * ...测试B2dShell 和 Box2dParser
  * @author Kanon
@@ -63,16 +68,17 @@ public class Test extends Sprite
 	private function mouseClickHandler(event:MouseEvent):void 
 	{
 		//一个对变形刚体的数据
-		var str:String = '{"bodyData":{"data0":{"shape":{"bodyType":2,"type":"poly","rotation":0,"friction":0,"vertices":[[-57.5,-79.5],[-3.5,-74.5],[57.5,-67.5],[89.5,-22.5],[89.5,28.5],[90.5,78.5],[37.5,79.5],[-12.5,79.5],[-62.5,73.5],[-90.5,30.5],[-90.5,-19.5],[-36.5,-6.5],[16.5,-1.5],[27.5,-50.5],[-22.5,-60.5]],"density":0.1,"name":"instance171","bodyLabel":"instance171","restitution":0,"width":181,"postion":{"x":100,"y":100},"height":159}}}}';
+		/*var str:String = '{"bodyData":{"data0":{"shape":{"bodyType":2,"type":"poly","rotation":0,"friction":0,"vertices":[[-57.5,-79.5],[-3.5,-74.5],[57.5,-67.5],[89.5,-22.5],[89.5,28.5],[90.5,78.5],[37.5,79.5],[-12.5,79.5],[-62.5,73.5],[-90.5,30.5],[-90.5,-19.5],[-36.5,-6.5],[16.5,-1.5],[27.5,-50.5],[-22.5,-60.5]],"density":0.1,"name":"instance171","bodyLabel":"instance171","restitution":0,"width":181,"postion":{"x":100,"y":100},"height":159}}}}';
 		var arr:Array = Box2dParser.decode(str, this.b2dShell);
 		//trace(arr.length)
 		var length:int = arr.length;
 		for (var i:int = 0; i < length; i += 1)
 		{
 			var o:b2Body = arr[i];
-			trace("bodyLabel", o.GetUserData().bodyLabel)
-		}
+			//trace("bodyLabel", o.GetUserData().bodyLabel)
+		}*/
 		this.createRect(mouseX, mouseY);
+		this.createPolyByBitmap();
 		//去掉注释你将看到Box2dParser解析的this.b2dShell数据
 		//trace(Box2dParser.encode(this.b2dShell));
 	}
@@ -178,6 +184,64 @@ public class Test extends Sprite
 		circleData.bodyType = b2Body.b2_dynamicBody;
 		circleData.bodyLabel = this.circleMc.name;
 		return this.b2dShell.createCircle(circleData);
+	}
+	
+	/**
+	 * 使用shell创建的刚体对象
+	 * @return
+	 */
+	private function createPolyByBitmap():b2Body
+	{
+		var polyData:PolyData = new PolyData();
+		polyData.friction = 1;
+		polyData.density = 1;
+		polyData.restitution = .1;
+		polyData.vertices = [[ -15.95, -33.5], [33.55, -33.5], [33.55, -13.25], [7.05, 33.5], [ -33.7, 33.5], [ -33.55, -2.75]];
+		var data:Vector.<Number> = new Vector.<Number>();
+		var commands:Vector.<int> = new Vector.<int>();
+		commands.push(GraphicsPathCommand.MOVE_TO);
+		var length:int = polyData.vertices.length;
+		for (var i:int = 0; i < length; i += 1) 
+		{
+			var posX:Number = polyData.vertices[i][0];
+			var posY:Number = polyData.vertices[i][1];
+			data.push(posX);
+			data.push(posY);
+			if (i > 0)
+				commands.push(GraphicsPathCommand.LINE_TO);
+		}
+		//一定要保存起点才能封闭整个路径
+		data.push(polyData.vertices[0][0]);
+		data.push(polyData.vertices[0][1]);
+		commands.push(GraphicsPathCommand.LINE_TO);
+		
+		var o:Object = this.b2dShell.mathSizeByPath(polyData.vertices);
+		var MyClass:Class = getDefinitionByName("T" + Random.randint(1, 5)) as Class;
+		var bitmap:BitmapData = new MyClass() as BitmapData;
+		polyData.displayObject = this.createBitmapFill(bitmap, commands, data);
+		this.addChild(polyData.displayObject)
+		polyData.postion = new Point(o.width / 2, o.height / 2);
+		polyData.boxPoint = new Point(o.width / 2, o.height / 2);
+		polyData.width = o.width;
+		polyData.height = o.height;
+		polyData.bodyType = b2Body.b2_dynamicBody;
+		polyData.bodyLabel = "bitmapBody";
+		return this.b2dShell.createPoly(polyData);
+	}
+	
+	
+	/**
+	 * 创建位图填充
+	 * @return
+	 */
+	private function createBitmapFill(bitmap:BitmapData, commands:Vector.<int>, data:Vector.<Number>):DisplayObject
+	{
+		var spt:Sprite = new Sprite();
+		spt.graphics.lineStyle(3, 0x000000);
+		spt.graphics.beginBitmapFill(bitmap);
+		spt.graphics.drawPath(commands, data);
+		spt.graphics.endFill();
+		return spt;
 	}
 	
 	/**
