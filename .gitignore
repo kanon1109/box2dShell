@@ -12,6 +12,8 @@ Thumbs.db
 /bin-debug/*
 /bin-release/*
 /bin/*
+/test/*.swf
+/*.swf
 
 .swf
 .txt

@@ -126,6 +126,7 @@ public class B2dShell
 		this.stage = null;
 		this.bodyDef = null;
 		this.fixtureDef = null;
+		this.separator = null;
 		this.destroyJointDict = null;
 	}
 	
@@ -137,7 +138,8 @@ public class B2dShell
 	public function createPoly(bodyData:PolyData):b2Body
 	{
 		//位置
-		this.bodyDef.position.Set(bodyData.postion.x / CONVERSION, bodyData.postion.y / CONVERSION);
+		this.bodyDef.position.Set(bodyData.postion.x / B2dShell.CONVERSION, 
+								  bodyData.postion.y / B2dShell.CONVERSION);
 		this.bodyDef.type = bodyData.bodyType;
 		//是否为子弹
 		this.bodyDef.bullet = bodyData.bullet;
@@ -163,6 +165,7 @@ public class B2dShell
 			//高
 			this.bodyDef.userData.dpObj.height = bodyData.height;
 		}
+		//刚体标签
 		this.bodyDef.userData.bodyLabel = bodyData.bodyLabel;
 		//创建刚体
 		this.body = this.world.CreateBody(this.bodyDef);
@@ -173,7 +176,8 @@ public class B2dShell
 		if (!bodyData.vertices)
 		{
 			//设置注册点
-			boxShape.SetAsBox(bodyData.boxPoint.x / CONVERSION, bodyData.boxPoint.y / CONVERSION);
+			boxShape.SetAsBox(bodyData.boxPoint.x / B2dShell.CONVERSION, 
+							  bodyData.boxPoint.y / B2dShell.CONVERSION);
 			this.fixtureDef.shape = boxShape;
 			this.body.CreateFixture(fixtureDef);
 		}
@@ -189,8 +193,8 @@ public class B2dShell
 			for (var i:int = 0; i < vertexCount; i += 1)
 			{
 				var b2v:b2Vec2 = new b2Vec2();
-				var x:Number = bodyData.vertices[i][0] / CONVERSION;
-				var y:Number = bodyData.vertices[i][1] / CONVERSION;
+				var x:Number = bodyData.vertices[i][0] / B2dShell.CONVERSION;
+				var y:Number = bodyData.vertices[i][1] / B2dShell.CONVERSION;
 				b2v.Set(x, y);
 				vertices.push(b2v);
 			}
@@ -200,8 +204,9 @@ public class B2dShell
 			 * fixtureDef.shape = boxShape;
 			 * this.body.CreateFixture(fixtureDef)
 			 */
-			var separator:b2Separator = new b2Separator();
-			separator.Separate(this.body, this.fixtureDef, vertices);
+			if (!this.separator)
+				this.separator = new b2Separator();
+			this.separator.Separate(this.body, this.fixtureDef, vertices);
 		}
 		return this.body;
 	}
@@ -213,9 +218,10 @@ public class B2dShell
 	public function createCircle(bodyData:CircleData):b2Body
 	{
 		//位置
-		this.bodyDef.position.Set(bodyData.postion.x / CONVERSION, bodyData.postion.y / CONVERSION);
+		this.bodyDef.position.Set(bodyData.postion.x / B2dShell.CONVERSION, 
+								  bodyData.postion.y / B2dShell.CONVERSION);
 		//圆形写义
-		var circleShape:b2CircleShape = new b2CircleShape(bodyData.radius / CONVERSION);
+		var circleShape:b2CircleShape = new b2CircleShape(bodyData.radius / B2dShell.CONVERSION);
 		this.bodyDef.type = bodyData.bodyType;
 		//是否为子弹
 		this.bodyDef.bullet = bodyData.bullet;
@@ -268,7 +274,7 @@ public class B2dShell
 		//设置水面的法向量
 		this.buoyancyController.normal.Set(p.x, p.y);
 		//设置水面的位置
-		this.buoyancyController.offset = offset / CONVERSION;
+		this.buoyancyController.offset = offset / B2dShell.CONVERSION;
 		//设置水的密度，因为我们创建的刚体密度是3，所以水的密度要大于3
 		this.buoyancyController.density = density;
 		//设置刚体在水中的移动阻尼
@@ -372,7 +378,7 @@ public class B2dShell
 	
 	/**
 	 * 验证多边形顶点是否合法
-	 * @param	pathList  路径列表
+	 * @param	pathList  路径列表 二维数组[[x,y],[x,y]]
 	 * @return	Object    是否成功的对象存放路径列表
 	 */
 	public function validatePolygon(pathList:Array):Object
@@ -415,7 +421,7 @@ public class B2dShell
 	
 	/**
 	 * 根据坐标计算这个坐标形成的图形的尺寸高宽
-	 * @param	path 路径列表
+	 * @param	path 路径列表 二维数组[[x,y],[x,y]]
 	 * @return  尺寸对象
 	 */
 	public function mathSizeByPath(path:Array):Object
@@ -475,8 +481,8 @@ public class B2dShell
 			if (this.userDataHasDisplayObject(bb))
 			{
 				var dpObj:DisplayObject = bb.GetUserData().dpObj;
-				dpObj.x = bb.GetPosition().x * CONVERSION;
-				dpObj.y = bb.GetPosition().y * CONVERSION;
+				dpObj.x = bb.GetPosition().x * B2dShell.CONVERSION;
+				dpObj.y = bb.GetPosition().y * B2dShell.CONVERSION;
 				dpObj.rotation = MathUtil.rds2dgs(bb.GetAngle());
 			}
 			this.bodyWrapAround(bb, this.wrapAroundRange);
@@ -516,17 +522,17 @@ public class B2dShell
 			}
 			if (isHorizontal)
 			{
-				if (body.GetPosition().x * CONVERSION > range.right)
-					body.SetPosition(new b2Vec2(range.left / CONVERSION, body.GetPosition().y));
-				else if (body.GetPosition().x * CONVERSION < range.left)
-					body.SetPosition(new b2Vec2(range.right / CONVERSION, body.GetPosition().y));
+				if (body.GetPosition().x * B2dShell.CONVERSION > range.right)
+					body.SetPosition(new b2Vec2(range.left / B2dShell.CONVERSION, body.GetPosition().y));
+				else if (body.GetPosition().x * B2dShell.CONVERSION < range.left)
+					body.SetPosition(new b2Vec2(range.right / B2dShell.CONVERSION, body.GetPosition().y));
 			}
 			if (isVertical)
 			{
-				if (body.GetPosition().y * CONVERSION > range.bottom)
-					body.SetPosition(new b2Vec2(body.GetPosition().x, range.top / CONVERSION));
-				else if (body.GetPosition().y * CONVERSION < range.top)
-					body.SetPosition(new b2Vec2(body.GetPosition().x, range.bottom / CONVERSION));
+				if (body.GetPosition().y * B2dShell.CONVERSION > range.bottom)
+					body.SetPosition(new b2Vec2(body.GetPosition().x, range.top / B2dShell.CONVERSION));
+				else if (body.GetPosition().y * B2dShell.CONVERSION < range.top)
+					body.SetPosition(new b2Vec2(body.GetPosition().x, range.bottom / B2dShell.CONVERSION));
 			}
 		}
 	}
@@ -837,7 +843,7 @@ public class B2dShell
 			this.debugDraw = new b2DebugDraw();
 			this.debugDraw.SetSprite(this.debugSprite);
 			this.debugDraw.SetLineThickness(.2);
-			this.debugDraw.SetDrawScale(CONVERSION);
+			this.debugDraw.SetDrawScale(B2dShell.CONVERSION);
 			this.debugDraw.SetAlpha(1);
 			//绘制模式 e_jointBit关节 e_shapeBit刚体 e_controllerBit碰撞组
 			this.debugDraw.SetFlags(b2DebugDraw.e_jointBit | b2DebugDraw.e_shapeBit | b2DebugDraw.e_controllerBit);
@@ -878,8 +884,8 @@ public class B2dShell
 	{
 		if (this.stage && this.mouseEnabled)
 		{
-			this.mouseXWorldPhys = this.stage.mouseX / CONVERSION;
-			this.mouseYWorldPhys = this.stage.mouseY / CONVERSION;
+			this.mouseXWorldPhys = this.stage.mouseX / B2dShell.CONVERSION;
+			this.mouseYWorldPhys = this.stage.mouseY / B2dShell.CONVERSION;
 		}
 	}
 	

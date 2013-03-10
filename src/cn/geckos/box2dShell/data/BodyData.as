@@ -17,8 +17,6 @@ public class BodyData
 	protected var _restitution:Number = 0.0;
 	//刚体的坐标位置
 	protected var _postion:Point;
-	//容器
-	protected var _container:DisplayObjectContainer;
 	//显示对象
 	protected var _displayObject:DisplayObject;
 	//注册点
@@ -76,15 +74,6 @@ public class BodyData
 	public function set postion(value:Point):void 
 	{
 		_postion = value;
-	}
-	
-	/**
-	 * 容器
-	 */
-	public function get container():DisplayObjectContainer { return _container; }
-	public function set container(value:DisplayObjectContainer):void 
-	{
-		_container = value;
 	}
 	
 	/**

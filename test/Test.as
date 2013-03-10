@@ -36,7 +36,6 @@ public class Test extends Sprite
 		this.floorMc = this.getChildByName("floor_mc") as Sprite;
 		
 		var polyData:PolyData = new PolyData();
-		polyData.container = this;
 		polyData.friction = 1;
 		polyData.density = 1;
 		polyData.restitution = .9;
@@ -70,8 +69,8 @@ public class Test extends Sprite
 		var length:int = arr.length;
 		for (var i:int = 0; i < length; i += 1)
 		{
-			var o:DisplayObject = arr[i];
-			this.addChild(o);
+			var o:b2Body = arr[i];
+			trace("bodyLabel", o.GetUserData().bodyLabel)
 		}
 		this.createRect(mouseX, mouseY);
 		//去掉注释你将看到Box2dParser解析的this.b2dShell数据
@@ -121,7 +120,6 @@ public class Test extends Sprite
 		this.boxMc.x = x;
 		this.boxMc.y = y;
 		var polyData:PolyData = new PolyData();
-		polyData.container = this;
 		polyData.friction = 1;
 		polyData.density = 1;
 		polyData.restitution = .1;
@@ -146,7 +144,6 @@ public class Test extends Sprite
 		this.boxMc.x = Math.random() * stage.stageWidth;
 		this.boxMc.y = Math.random() * stage.stageHeight;
 		var polyData:PolyData = new PolyData();
-		polyData.container = this;
 		polyData.friction = 1;
 		polyData.density = 1;
 		polyData.restitution = .1;
@@ -173,7 +170,6 @@ public class Test extends Sprite
 		this.circleMc.y = Math.random() * stage.stageHeight;
 		var circleData:CircleData = new CircleData();
 		circleData.radius = this.circleMc.width / 2;
-		circleData.container = this;
 		circleData.friction = 1;
 		circleData.density = 1;
 		circleData.restitution = .1;

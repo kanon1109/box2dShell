@@ -24,10 +24,7 @@ import cn.geckos.box2dShell.engine.B2dShell;
 import cn.geckos.utils.MathUtil;
 import com.adobe.serialization.json.JSON;
 import flash.display.DisplayObject;
-import flash.display.Sprite;
 import flash.geom.Point;
-import flash.utils.getDefinitionByName;
-import flash.utils.getQualifiedClassName;
 /**
  * ...Box2d解析器 
  * 可以将box2dshell内的数据转成json格式
@@ -38,13 +35,13 @@ public class Box2dParser
 {
 	/**
 	 * 解码 将字符串内容解码成box2d的内容
-	 * @param	str JSON格式的字符串
+	 * @param	str 	 JSON格式的字符串
 	 * @param	b2dShell box2d外壳
-	 * @return  显示格式对象列表
+	 * @return  刚体列表
 	 */
 	public static function decode(str:String, b2dShell:B2dShell):Array
 	{
-		if (!str || str == "") return null;
+		if (!str) return null;
 		var arr:Array = Box2dParser.decodeBody(str, b2dShell);
 		Box2dParser.decodeJoint(str, b2dShell);
 		return arr;
@@ -52,13 +49,13 @@ public class Box2dParser
 	
 	/**
 	 * 解码刚体
-	 * @param	str JSON格式的字符串
+	 * @param	str 	 JSON格式的字符串
 	 * @param	b2dShell box2d外壳
-	 * @return  刚体的显示对象列表
+	 * @return  刚体列表
 	 */
 	public static function decodeBody(str:String, b2dShell:B2dShell):Array
 	{
-		if (!str || str == "") return null;
+		if (!str) return null;
 		var obj:Object = JSON.decode(str);
 		var arr:Array = [];
 		var body:b2Body;
@@ -74,20 +71,7 @@ public class Box2dParser
 					body = Box2dParser.decodeCircleBody(o.shape, b2dShell);
 				//显示对象
 				body.SetAngle(MathUtil.dgs2rds(o.shape.rotation));
-				if (body && 
-					body.GetUserData() && 
-					body.GetUserData().dpObj &&
-					body.GetUserData().dpObj is DisplayObject)
-				{
-					var dpObj:DisplayObject = body.GetUserData().dpObj;
-					try
-					{
-						//防止修改时间轴上的元件
-						dpObj.name = o.shape.name;
-					}
-					catch (e:Error) { };
-					arr.push(dpObj);
-				}
+				arr.push(body);
 			}
 		}
 		return arr;
@@ -96,15 +80,12 @@ public class Box2dParser
 	/**
 	 * 解码多边形刚体
 	 * @param	shapeData 图形数据
-	 * @param	b2dShell box2d外壳  
+	 * @param	b2dShell  box2d外壳  
 	 * @return  刚体
 	 */
 	public static function decodePolyBody(shapeData:Object, b2dShell:B2dShell):b2Body
 	{
 		var polyData:PolyData = new PolyData();
-		var displayObject:Sprite = getSprite(shapeData.className);
-		if (displayObject)
-			polyData.displayObject = displayObject;
 		polyData.bodyLabel = shapeData.bodyLabel;
 		polyData.bodyType = shapeData.bodyType;
 		polyData.width = shapeData.width;
@@ -121,15 +102,12 @@ public class Box2dParser
 	/**
 	 * 解码圆形刚体
 	 * @param	shapeData 图形数据
-	 * @param	b2dShell box2d外壳  
+	 * @param	b2dShell  box2d外壳  
 	 * @return  刚体
 	 */
 	public static function decodeCircleBody(shapeData:Object, b2dShell:B2dShell):b2Body
 	{
 		var circleData:CircleData = new CircleData();
-		var displayObject:Sprite = getSprite(shapeData.className);
-		if (displayObject)
-			circleData.displayObject = displayObject;
 		circleData.bodyLabel = shapeData.bodyLabel;
 		circleData.bodyType = shapeData.bodyType;
 		circleData.radius = shapeData.radius;
@@ -143,7 +121,7 @@ public class Box2dParser
 	
 	/**
 	 * 解码关节
-	 * @param	str  关节数据
+	 * @param	str  	 关节数据
 	 * @param	b2dShell box2d外壳
 	 * @return  显示格式对象列表
 	 */
@@ -235,7 +213,7 @@ public class Box2dParser
 	
 	/**
 	 * 距离关节解码
-	 * @param	o 距离关节数据对象
+	 * @param	o 		  距离关节数据对象
 	 * @param	b2dShell  box2d外壳
 	 * @return  距离关节
 	 */
@@ -263,7 +241,7 @@ public class Box2dParser
 	
 	/**
 	 * 摩擦关节解码
-	 * @param	o 摩擦关节数据对象
+	 * @param	o 		  摩擦关节数据对象
 	 * @param	b2dShell  box2d外壳
 	 * @return  摩擦关节
 	 */
@@ -290,7 +268,7 @@ public class Box2dParser
 	
 	/**
 	 * 焊接关节解码
-	 * @param	o 焊接关节数据对象
+	 * @param	o 		  焊接关节数据对象
 	 * @param	b2dShell  box2d外壳
 	 * @return  焊接关节
 	 */
@@ -313,10 +291,10 @@ public class Box2dParser
 	}
 	
  	/**
-	 * 编码 将box2d world内的数据保存为字符串形式
- 	 * @param	world
-	 * @return json格式的字符串
-	 */
+ 	 * 编码将box2d world内的数据保存为字符串形式
+ 	 * @param	b2dShell  box2d外壳
+ 	 * @return  json格式的字符串
+ 	 */
 	public static function encode(b2dShell:B2dShell):String
 	{
 		var obj:Object = { };
@@ -347,9 +325,9 @@ public class Box2dParser
 	
 	/**
 	 * 编码关节
-	 * @param	joint 关节
+	 * @param	joint    关节
 	 * @param	b2dShell box2d外壳
-	 * @return  关节对象
+	 * @return  关节对象 
 	 */
 	public static function encodeJoint(joint:b2Joint, b2dShell:B2dShell):Object
 	{
@@ -389,8 +367,9 @@ public class Box2dParser
 	
 	/**
 	 * 编码焊接关节
-	 * @param	b2WeldJoint
-	 * @param	b2dShell
+	 * @param	b2WeldJoint  焊接关节对象
+	 * @param	b2dShell     box2d外壳
+	 * @return  关节对象
 	 */
 	public static function encodeWeldJoint(joint:b2WeldJoint, b2dShell:B2dShell):Object 
 	{
@@ -406,7 +385,8 @@ public class Box2dParser
 	
 	/**
 	 * 编码摩擦关节
-	 * @param	joint 摩擦关节
+	 * @param	joint 		 摩擦关节
+	 * @param	b2dShell     box2d外壳
 	 * @return  摩擦关节对象
 	 */
 	public static function encodeFrictionJoint(joint:b2FrictionJoint, b2dShell:B2dShell):Object
@@ -425,7 +405,8 @@ public class Box2dParser
 	
 	/**
 	 * 编码距离关节
-	 * @param	joint 距离关节
+	 * @param	joint 		 距离关节
+	 * @param	b2dShell     box2d外壳
 	 * @return  距离关节对象
 	 */
 	public static function encodeDistanceJoint(joint:b2DistanceJoint, b2dShell:B2dShell):Object
@@ -446,7 +427,8 @@ public class Box2dParser
 	
 	/**
 	 * 编码旋转关节
-	 * @param	joint 旋转关节
+	 * @param	joint 		 旋转关节
+	 * @param	b2dShell     box2d外壳
 	 * @return  旋转关节对象
 	 */
 	public static function encodeRevoluteJoint(joint:b2RevoluteJoint, b2dShell:B2dShell):Object
@@ -470,7 +452,8 @@ public class Box2dParser
 	
 	/**
 	 * 编码滑轮关节
-	 * @param	joint 滑轮关节
+	 * @param	joint 		 滑轮关节
+	 * @param	b2dShell     box2d外壳
 	 * @return  滑轮关节对象
 	 */
 	public static function encodePulleyJoint(joint:b2PulleyJoint, b2dShell:B2dShell):Object
@@ -494,8 +477,8 @@ public class Box2dParser
 	
 	/**
 	  * 获取关节上刚体的名字
-	 * @param	joint 关节
-	 * @param	b2dShell 
+	 * @param	joint 		 被获取的关节
+	 * @param	b2dShell     box2d外壳
 	 * @return  刚体名字对象
 	 */
 	private static function getJointBodyName(joint:b2Joint, b2dShell:B2dShell):Object
@@ -538,7 +521,7 @@ public class Box2dParser
 	
 	/**
 	 * 一个刚体的编码
-	 * @param	body 刚体
+	 * @param	body 需要编码的刚体
 	 * @return  对象
 	 */
 	public static function encodeBody(body:b2Body):Object
@@ -555,12 +538,6 @@ public class Box2dParser
 		if (body.GetUserData())
 		{
 			var userData:Object = body.GetUserData();
-			if (userData.dpObj && userData.dpObj is DisplayObject)
-			{
-				var dpObj:DisplayObject = userData.dpObj as DisplayObject;
-				var className:String = getQualifiedClassName(dpObj);
-				shapeObj.className = className;
-			}
 			if (userData.bodyLabel)
 				shapeObj.bodyLabel = userData.bodyLabel;
 			shapeObj.name = userData.name;
@@ -594,26 +571,6 @@ public class Box2dParser
 			}
 		}
 		return shapeObj;
-	}
-	
-	/**
-	 * 获取sprite
-	 * @param	name
-	 * @return  sprite
-	 */
-	private static function getSprite(name:String):Sprite
-	{
-		if (!name || name == "") return null;
-		try
-		{
-			var MyClass:Class = getDefinitionByName(name) as Class;
-			return Sprite(new MyClass());
-		}
-		catch (e:Error) 
-		{
-			trace("刚体对象找不到相对应于库内的" + name + "链接");
-		};
-		return null;
 	}
 }
 }
