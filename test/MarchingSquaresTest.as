@@ -1,7 +1,5 @@
 package  
 {
-import Box2D.Dynamics.b2Body;
-import cn.geckos.box2dShell.data.PolyData;
 import cn.geckos.box2dShell.engine.B2dShell;
 import cn.geckos.box2dShell.plugs.MarchingSquares;
 import cn.geckos.utils.RDP;
@@ -11,17 +9,14 @@ import flash.display.Sprite;
 import flash.events.Event;
 import flash.geom.Matrix;
 import flash.geom.Point;
-
 /**
- * ...
+ * ...算法自动提取多边形的边缘测试
  * @author Kanon
  */
 public class MarchingSquaresTest extends Sprite 
 {
 	private var b2dShell:B2dShell
-	private var bitmapData:BitmapData=new BitmapData(640,480,true,0x00000000);
-	// tolerance is the amount of alpha for a pixel to be considered solid
-	private var tolerance:Number=0x01;
+	private var bitmapData:BitmapData = new BitmapData(640, 480, true, 0x00000000);
 	public function MarchingSquaresTest() 
 	{
 		this.b2dShell = new B2dShell();
