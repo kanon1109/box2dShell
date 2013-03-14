@@ -54,6 +54,10 @@ public class Test extends Sprite
 		this.b2dShell.createPoly(polyData);
 		this.b2dShell.mouseEnabled = true;
 		
+		this.createRect(100, 100);
+		this.createCircle();
+		this.createPoly();
+		
 		//this.b2dShell.createOutSide(100, 100, 110, 130, 1);
 		//this.b2dShell.createOutSide(0, 0, 550, 400, 30);
 		this.b2dShell.createCircleGround(150, stage.stageWidth * .5, stage.stageHeight * .5 , 36);
@@ -77,8 +81,11 @@ public class Test extends Sprite
 			var o:b2Body = arr[i];
 			//trace("bodyLabel", o.GetUserData().bodyLabel)
 		}*/
-		this.createRect(mouseX, mouseY);
-		this.createPolyByBitmap();
+		//this.createRect(mouseX, mouseY);
+		//this.createPolyByBitmap();
+		var body:b2Body = this.b2dShell.getBodyByPostion(mouseX / B2dShell.CONVERSION, mouseY / B2dShell.CONVERSION);
+		trace("body", body);
+		this.b2dShell.resizeBody(body, .9);
 		//去掉注释你将看到Box2dParser解析的this.b2dShell数据
 		//trace(Box2dParser.encode(this.b2dShell));
 	}

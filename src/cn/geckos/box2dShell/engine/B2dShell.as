@@ -379,7 +379,7 @@ public class B2dShell
 	/**
 	 * 验证多边形顶点是否合法
 	 * @param	pathList  路径列表 二维数组[[x,y],[x,y]]
-	 * @return	Object    是否成功的对象存放路径列表
+	 * @return	Object    返回状态 success 0为失败 1为成功，高宽、最左最右坐标、最上最下坐标。
 	 */
 	public function validatePolygon(pathList:Array):Object
 	{
@@ -460,6 +460,42 @@ public class B2dShell
 		return { "width":width, "height":height, 
 				 "minX":minX, "maxX":maxX,
 				 "minY":minY, "maxY":maxY };
+	}
+	
+	/**
+	 * 缩放刚体
+	 * @param	body      被缩放的刚体
+	 * @param	sizeRatio 缩放比例
+	 */
+	public function resizeBody(body:b2Body, sizeRatio:Number):void
+	{
+		//静态刚体无法缩放
+		if (!body || body.GetType() == b2Body.b2_staticBody) return;
+		var shape:b2Shape = body.GetFixtureList().GetShape();
+		var displayObj:DisplayObject = this.getUseDataByBody(body);
+		if (shape is b2CircleShape)
+		{
+			//圆形刚体直接缩放半径sizeRatio倍
+			b2CircleShape(shape).SetRadius(b2CircleShape(shape).GetRadius() * sizeRatio);
+		}
+		else if (shape is b2PolygonShape)
+		{
+			 //遍历图形的所有顶点，将顶点到中心点的距离缩小为sizeRatio倍
+			for each( var vec:b2Vec2 in b2PolygonShape(shape).GetVertices())
+			{
+				vec.Multiply(sizeRatio);
+			}
+		}
+		if (displayObj)
+		{
+			//先保存之前的角度
+			var rotation:Number = displayObj.rotation;
+			displayObj.rotation = 0;
+			displayObj.width *= sizeRatio;
+			displayObj.height *= sizeRatio;
+			displayObj.rotation = rotation;
+		}
+		body.SetAwake(true);
 	}
 	
 	/**
@@ -603,6 +639,11 @@ public class B2dShell
 	//======================
 	// GetBodyAtMouse
 	//======================
+	/**
+	 * 获取鼠标位置的刚体
+	 * @param	includeStatic  是否包括静态刚体
+	 * @return  鼠标位置的刚体
+	 */
 	private function getBodyAtMouse(includeStatic:Boolean = true):b2Body
 	{
 		// Make a small box.
@@ -612,8 +653,8 @@ public class B2dShell
 	
 	/**
 	 * 根据坐标返回刚体数据
-	 * @param	x 				x位置
-	 * @param	y 				y位置
+	 * @param	x 				x位置（物理位置 非flash坐标位置）
+	 * @param	y 				y位置（物理位置 非flash坐标位置）
 	 * @param	includeStatic   是否包括静态刚体
 	 * @return  返回刚体
 	 */
