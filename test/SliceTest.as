@@ -5,9 +5,13 @@ import cn.geckos.box2dShell.data.PolyData;
 import cn.geckos.box2dShell.engine.B2dShell;
 import cn.geckos.box2dShell.plugs.Slice;
 import cn.geckos.utils.Random;
+import flash.display.BitmapData;
+import flash.display.DisplayObject;
+import flash.display.GraphicsPathCommand;
 import flash.display.Sprite;
 import flash.events.Event;
 import flash.geom.Point;
+import flash.utils.getDefinitionByName;
 
 /**
  * ...切割测试
@@ -30,7 +34,6 @@ public class SliceTest extends Sprite
 		
 		this.floorMc = this.getChildByName("floor_mc") as Sprite;
 		var polyData:PolyData = new PolyData();
-		polyData.container = this;
 		polyData.friction = 5;
 		polyData.density = 1;
 		polyData.restitution = 0;
@@ -47,7 +50,7 @@ public class SliceTest extends Sprite
 		this.createRect();
 		this.slice = new Slice(this.b2dShell, stage, this);
 		this.slice.mouseDraw = true;
-		this.slice.addDontSliceDict(poly);
+		this.slice.addIgnoreBody(poly);
 		
 		this.addEventListener(Event.ENTER_FRAME, enterFrameHandler);
 	}
@@ -59,7 +62,6 @@ public class SliceTest extends Sprite
 	private function createRect():b2Body
 	{
 		var polyData:PolyData = new PolyData();
-		polyData.container = this;
 		polyData.friction = 1;
 		polyData.density = 1;
 		polyData.restitution = .1;
@@ -69,7 +71,47 @@ public class SliceTest extends Sprite
 		polyData.height = 100;
 		polyData.postion = new Point(Random.randint(50, 300), Random.randint(50, 300));
 		polyData.bodyType = b2Body.b2_dynamicBody;
+		
+		var data:Vector.<Number> = new Vector.<Number>();
+		var commands:Vector.<int> = new Vector.<int>();
+		commands.push(GraphicsPathCommand.MOVE_TO);
+		var vertices:Array = [[ -1, -1], [1, -1], [1, 1], [ -1, 1]];
+		var length:int = vertices.length;
+		for (var i:int = 0; i < length; i += 1) 
+		{
+			var posX:Number = vertices[i][0] * polyData.width * .5;
+			var posY:Number = vertices[i][1] * polyData.height * .5;
+			data.push(posX);
+			data.push(posY);
+			if (i > 0)
+				commands.push(GraphicsPathCommand.LINE_TO);
+		}
+		//一定要保存起点才能封闭整个路径
+		data.push(vertices[0][0] * polyData.width * .5);
+		data.push(vertices[0][1] * polyData.width * .5);
+		commands.push(GraphicsPathCommand.LINE_TO);
+		
+		var MyClass:Class = getDefinitionByName("T" + Random.randint(1, 5)) as Class;
+		var bitmap:BitmapData = new MyClass() as BitmapData;
+		polyData.displayObject = this.createBitmapFill(bitmap, commands, data);
+		this.addChild(polyData.displayObject)
+		
 		return this.b2dShell.createPoly(polyData);
+	}
+	
+	
+	/**
+	 * 创建位图填充
+	 * @return
+	 */
+	private function createBitmapFill(bitmap:BitmapData, commands:Vector.<int>, data:Vector.<Number>):DisplayObject
+	{
+		var spt:Sprite = new Sprite();
+		spt.graphics.lineStyle(3, 0x000000);
+		spt.graphics.beginBitmapFill(bitmap);
+		spt.graphics.drawPath(commands, data);
+		spt.graphics.endFill();
+		return spt;
 	}
 	
 	private function enterFrameHandler(event:Event):void 
