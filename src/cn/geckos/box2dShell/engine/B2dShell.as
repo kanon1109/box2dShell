@@ -605,8 +605,8 @@ public class B2dShell
 	}
 	
 	/**
-	 * 根据名字获取刚体数据
-	 * @param	name
+	 * 根据刚体上的显示对象的名字获取刚体数据
+	 * @param	name   显示对象的名字
 	 * @return  刚体
 	 */
 	public function getBodyByName(name:String):b2Body

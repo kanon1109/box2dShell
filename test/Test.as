@@ -350,6 +350,16 @@ public class Test extends Sprite
 	private function enterFrameHandler(event:Event):void 
 	{
 		this.b2dShell.render();
+		/*var arr:Array = this.b2dShell.getBodyList();
+		for each (var body:b2Body in arr) 
+		{
+			var velocity:b2Vec2 = body.GetLinearVelocity();
+			//单位化刚体速度，只保留速度的方向
+			velocity.Normalize();
+			//设置刚体速度的大小为speed，因为是在ENTER_FRAME事件处理器里实时更新
+			//所以我们看不到刚体速度的减慢
+			velocity.Multiply(.7);
+		}*/
 	}
 	
 }

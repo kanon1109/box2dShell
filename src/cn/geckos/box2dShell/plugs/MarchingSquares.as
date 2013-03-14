@@ -15,6 +15,11 @@ public class MarchingSquares
 		
 	}
 	
+	/**
+	 * 将png位图边缘生成一个点的坐标列表
+	 * @param	bitmapData 位图对象
+	 * @return  点的坐标列表
+	 */
 	public function marchingSquares(bitmapData:BitmapData):Vector.<Point>
 	{
 			var contourVector:Vector.<Point> = new Vector.<Point>();
