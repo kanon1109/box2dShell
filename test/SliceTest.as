@@ -3,17 +3,15 @@ package
 import Box2D.Dynamics.b2Body;
 import cn.geckos.box2dShell.data.PolyData;
 import cn.geckos.box2dShell.engine.B2dShell;
-import cn.geckos.box2dShell.plugs.Material;
+import cn.geckos.box2dShell.plugs.event.PlugsEvent;
 import cn.geckos.box2dShell.plugs.Slice;
+import cn.geckos.box2dShell.plugs.Texture;
 import cn.geckos.utils.Random;
 import flash.display.BitmapData;
-import flash.display.DisplayObject;
-import flash.display.GraphicsPathCommand;
 import flash.display.Sprite;
 import flash.events.Event;
 import flash.geom.Point;
 import flash.utils.getDefinitionByName;
-
 /**
  * ...切割测试
  * @author Kanon
@@ -23,6 +21,10 @@ public class SliceTest extends Sprite
 	private var b2dShell:B2dShell;
 	private var slice:Slice;
 	private var floorMc:Sprite;
+	//纹理容器
+	private var textureContainer:Sprite;
+	//线条容器
+	private var canvasContainer:Sprite;
 	public function SliceTest() 
 	{
 		this.b2dShell = new B2dShell();
@@ -45,15 +47,35 @@ public class SliceTest extends Sprite
 		polyData.bodyLabel = "wall";
 		polyData.postion = new Point(this.floorMc.x, this.floorMc.y);
 		polyData.bodyType = b2Body.b2_staticBody;
-		var poly:b2Body = this.b2dShell.createPoly(polyData)
+		this.b2dShell.createPoly(polyData);
 		
-		this.createRect();
-		this.createRect();
-		this.slice = new Slice(this.b2dShell, stage, this);
+		this.textureContainer = new Sprite();
+		this.canvasContainer = new Sprite();
+		this.addChild(this.textureContainer);
+		this.addChild(this.canvasContainer);
+		
+		
+		this.slice = new Slice(this.b2dShell, stage, this.canvasContainer);
 		this.slice.mouseDraw = true;
-		this.slice.addIgnoreBody(poly);
+		
+		this.slice.addSliceBody(this.createRect());
+		this.slice.addSliceBody(this.createRect());
+		this.slice.addEventListener(PlugsEvent.SLICE_COMPLETE, sliceCompleteHandler);
 		
 		this.addEventListener(Event.ENTER_FRAME, enterFrameHandler);
+	}
+	
+	private function sliceCompleteHandler(event:PlugsEvent):void 
+	{
+		var bodyData:PolyData = event.data.bodyData as PolyData;
+		var texture:BitmapData = event.data.texture;
+		if (!texture) return;
+		bodyData.texture = texture;
+		bodyData.displayObject = Texture.createTextureByVertices(bodyData.vertices, texture, 1, 0x000000);
+		this.textureContainer.addChild(bodyData.displayObject)
+		var body:b2Body = this.b2dShell.createPoly(bodyData);
+		body.SetBullet(true);
+		this.slice.addSliceBody(body);
 	}
 	
 	/**
@@ -73,26 +95,11 @@ public class SliceTest extends Sprite
 		polyData.postion = new Point(Random.randint(50, 300), Random.randint(50, 300));
 		polyData.bodyType = b2Body.b2_dynamicBody;
 		
-		var MyClass:Class = getDefinitionByName("T" + Random.randint(1, 5)) as Class;
-		var bitmap:BitmapData = new MyClass() as BitmapData;
-		polyData.displayObject = Material.createMaterialByBoxSize(polyData.width, polyData.height, bitmap, 1, 0x000000)
-		this.addChild(polyData.displayObject)
+		var MyClass:Class = getDefinitionByName("T" + 1) as Class;
+		polyData.texture = new MyClass() as BitmapData;
+		polyData.displayObject = Texture.createTextureByBoxSize(polyData.width, polyData.height, polyData.texture, 1, 0x000000)
+		this.textureContainer.addChild(polyData.displayObject);
 		return this.b2dShell.createPoly(polyData);
-	}
-	
-	
-	/**
-	 * 创建位图填充
-	 * @return
-	 */
-	private function createBitmapFill(bitmap:BitmapData, commands:Vector.<int>, data:Vector.<Number>):DisplayObject
-	{
-		var spt:Sprite = new Sprite();
-		spt.graphics.lineStyle(3, 0x000000);
-		spt.graphics.beginBitmapFill(bitmap);
-		spt.graphics.drawPath(commands, data);
-		spt.graphics.endFill();
-		return spt;
 	}
 	
 	private function enterFrameHandler(event:Event):void 

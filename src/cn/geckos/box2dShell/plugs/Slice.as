@@ -6,18 +6,21 @@ import Box2D.Dynamics.b2Body;
 import Box2D.Dynamics.b2Fixture;
 import cn.geckos.box2dShell.data.PolyData;
 import cn.geckos.box2dShell.engine.B2dShell;
+import cn.geckos.box2dShell.plugs.event.PlugsEvent;
+import flash.display.BitmapData;
+import flash.display.DisplayObject;
 import flash.display.DisplayObjectContainer;
 import flash.display.Sprite;
 import flash.display.Stage;
+import flash.events.EventDispatcher;
 import flash.events.MouseEvent;
 import flash.geom.Point;
 import flash.utils.Dictionary;
-
 /**
  * ...切片插件 将刚体切片
  * @author Kanon
  */
-public class Slice
+public class Slice extends EventDispatcher
 {
 	private var b2dShell:B2dShell;
 	private var stage:Stage;
@@ -37,7 +40,7 @@ public class Slice
 	//激光的进入点
 	private var entryPoint:Vector.<b2Vec2>;
 	//存放不需要切割的刚体
-	private var ignoreDictionary:Dictionary;
+	private var sliceDictionary:Dictionary;
 	public function Slice(b2dShell:B2dShell, stage:Stage, canvasContainer:DisplayObjectContainer = null)
 	{
 		this.b2dShell = b2dShell;
@@ -146,8 +149,8 @@ public class Slice
 	{
 		//受到激光影响的刚体
 		var affectedBody:b2Body = fixture.GetBody();
-		//如果有不允许切片的在列表内则 返回并继续判断切割
-		if (this.ignoreDictionary && this.ignoreDictionary[affectedBody]) return 1;
+		//如果没有添加进切割列表内则 返回并继续判断切割
+		if (this.sliceDictionary && !this.sliceDictionary[affectedBody]) return 1;
 		//获取刚体图形
 		var affectedBodyPolygon:b2PolygonShape = fixture.GetShape() as b2PolygonShape;
 		var fixtureIndex:int = this.affectedByLaser.indexOf(affectedBody);
@@ -218,8 +221,8 @@ public class Slice
 				newPolyVertices2.push(this.entryPoint[fixtureIndex]);
 				newPolyVertices2.push(point);
 			}
-			this.splitBody(fixture, newPolyVertices1, newPolyVertices1.length);
-			this.splitBody(fixture, newPolyVertices2, newPolyVertices2.length);
+			this.splitBody(fixture, newPolyVertices1, newPolyVertices1.length, affectedBody);
+			this.splitBody(fixture, newPolyVertices2, newPolyVertices2.length, affectedBody);
 			this.b2dShell.destroyBody(affectedBody);
 		}
 		return 1;
@@ -259,33 +262,44 @@ public class Slice
 	
 	/**
 	 * 创建切割后的多边形
-	 * @param	fixture    被激光切割的对象
+	 * @param	fixture      被激光切割的对象
 	 * @param	vertices     多边形顶点坐标
 	 * @param	numVertices  顶点数量
+	 * @param	affectedBody 受影响的刚体
 	 */
-	private function splitBody(fixture:b2Fixture, vertices:Vector.<b2Vec2>, numVertices:int):void
+	private function splitBody(fixture:b2Fixture, vertices:Vector.<b2Vec2>, numVertices:int, affectedBody:b2Body):void
 	{
-		if (!fixture) return;
+		if (!fixture || !affectedBody) return;
 		//多边形
 		var polyVertices:Array = [];
-		var centre:b2Vec2 = findCentroid(vertices, vertices.length);
+		var centre:b2Vec2 = this.findCentroid(vertices, vertices.length);
 		for (var i:int = 0; i < numVertices; i++)
 		{
 			vertices[i].Subtract(centre);
 			polyVertices.push([vertices[i].x * B2dShell.CONVERSION, vertices[i].y * B2dShell.CONVERSION]);
+		}
+		for (i = 0; i < numVertices; i++)
+		{
+			vertices[i].Add(centre);
 		}
 		var bodyData:PolyData = new PolyData();
 		bodyData.density = fixture.GetDensity();
 		bodyData.friction = fixture.GetFriction();
 		bodyData.restitution = fixture.GetRestitution();
 		bodyData.vertices = polyVertices;
+		bodyData.radian = affectedBody.GetAngle();
 		bodyData.postion = new Point(centre.x * B2dShell.CONVERSION, centre.y * B2dShell.CONVERSION);
 		bodyData.bodyType = b2Body.b2_dynamicBody;
-		this.b2dShell.createPoly(bodyData);
-		for (i = 0; i < numVertices; i++)
-		{
-			vertices[i].Add(centre);
-		}
+		
+		//发送事件出去，外部根据事件穿的多边形对象选择是否创建一个新刚体。
+		var event:PlugsEvent = new PlugsEvent(PlugsEvent.SLICE_COMPLETE);
+		var userData:Object = this.b2dShell.getUserDataByBody(affectedBody);
+		var texture:BitmapData;
+		//获取纹理对象
+		if (userData && userData.texture) texture = userData.texture;
+		//刚体数据以及纹理对象
+		event.data = { "bodyData":bodyData, "texture":texture };
+		this.dispatchEvent(event);
 	}
 	
 	/**
@@ -302,24 +316,24 @@ public class Slice
 	}
 	
 	/**
-	 * 添加不需要被切割的刚体
-	 * @param	body  不需要被切割的刚体
+	 * 添加需要被切割的刚体
+	 * @param	body  需要被切割的刚体
 	 */
-	public function addIgnoreBody(body:b2Body):void
+	public function addSliceBody(body:b2Body):void
 	{
-		if (!this.ignoreDictionary)
-			this.ignoreDictionary = new Dictionary();
-		this.ignoreDictionary[body] = body;
+		if (!this.sliceDictionary)
+			this.sliceDictionary = new Dictionary();
+		this.sliceDictionary[body] = body;
 	}
 	
 	/**
-	 * 删除添加进不需要被切割的刚体列表内的刚体
-	 * @param	body  需要被切割的刚体
+	 * 删除添加进需要被切割的刚体列表内的刚体
+	 * @param	body  不需要被切割的刚体
 	 */
-	public function deleteIgnoreBody(body:b2Body):void
+	public function deleteSliceBody(body:b2Body):void
 	{
-		if (!this.ignoreDictionary) return;
-		delete this.ignoreDictionary[body];
+		if (!this.sliceDictionary) return;
+		delete this.sliceDictionary[body];
 	}
 	
 	/**
@@ -349,7 +363,7 @@ public class Slice
 		this.affectedByLaser = null;
 		this.entryPoint = null;
 		this.affectedByLaser = null;
-		this.ignoreDictionary = null;
+		this.sliceDictionary = null;
 		this.stage = null;
 	}
 	

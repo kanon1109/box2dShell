@@ -150,7 +150,10 @@ public class B2dShell
 		//弹性 0-1
 		this.fixtureDef.restitution = bodyData.restitution;
 		this.bodyDef.userData = { };
+		//刚体参数
 		this.bodyDef.userData.params = bodyData.params;
+		//材质
+		this.bodyDef.userData.texture = bodyData.texture;
 		//是否环绕屏幕
 		this.bodyDef.userData.isWrapAround = bodyData.isWrapAround;
 		//环绕屏幕的方向
@@ -169,8 +172,11 @@ public class B2dShell
 		this.bodyDef.userData.bodyLabel = bodyData.bodyLabel;
 		//创建刚体
 		this.body = this.world.CreateBody(this.bodyDef);
-		if (bodyData.rotation)
+		//如果没弧度则设置角度
+		if (!bodyData.radian && bodyData.rotation)
 			this.body.SetAngle(MathUtil.dgs2rds(bodyData.rotation));
+		else if (bodyData.radian)
+			this.body.SetAngle(bodyData.radian);
 		//多边形写义
 		var boxShape:b2PolygonShape = new b2PolygonShape();
 		if (!bodyData.vertices)
@@ -233,7 +239,10 @@ public class B2dShell
 		this.fixtureDef.restitution = bodyData.restitution;
 		this.fixtureDef.shape = circleShape;
 		this.bodyDef.userData = { };
+		//刚体参数
 		this.bodyDef.userData.params = bodyData.params;
+		//材质
+		this.bodyDef.userData.texture = bodyData.texture;
 		//是否环绕屏幕
 		this.bodyDef.userData.isWrapAround = bodyData.isWrapAround;
 		//环绕屏幕的方向
@@ -251,8 +260,11 @@ public class B2dShell
 		this.bodyDef.userData.bodyLabel = bodyData.bodyLabel;
 		//创建刚体
 		this.body = this.world.CreateBody(this.bodyDef);
-		if (bodyData.rotation)
+		//如果没弧度则设置角度
+		if (!bodyData.radian && bodyData.rotation)
 			this.body.SetAngle(MathUtil.dgs2rds(bodyData.rotation));
+		else if (bodyData.radian)
+			this.body.SetAngle(bodyData.radian);
 		//创建图形
 		this.body.CreateFixture(fixtureDef);
 		return this.body;
@@ -472,7 +484,7 @@ public class B2dShell
 		//静态刚体无法缩放
 		if (!body || body.GetType() == b2Body.b2_staticBody) return;
 		var shape:b2Shape = body.GetFixtureList().GetShape();
-		var displayObj:DisplayObject = this.getUseDataByBody(body);
+		var displayObj:DisplayObject = this.getDisplayObjectByBody(body);
 		if (shape is b2CircleShape)
 		{
 			//圆形刚体直接缩放半径sizeRatio倍
@@ -766,10 +778,23 @@ public class B2dShell
 	 * @param	body  刚体
 	 * @return  显示对象
 	 */
-	public function getUseDataByBody(body:b2Body):DisplayObject
+	public function getDisplayObjectByBody(body:b2Body):DisplayObject
 	{
 		if (this.userDataHasDisplayObject(body))
 			return body.GetUserData().dpObj;
+		else
+			return null;
+	}
+	
+	/**
+	 * 根据刚体获取userData
+	 * @param	body  刚体
+	 * @return  userData用户数据对象
+	 */
+	public function getUserDataByBody(body:b2Body):Object
+	{
+		if (body && body.GetUserData())
+			return body.GetUserData();
 		else
 			return null;
 	}

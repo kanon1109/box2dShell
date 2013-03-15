@@ -1,5 +1,6 @@
 package cn.geckos.box2dShell.data 
 {
+import flash.display.BitmapData;
 import flash.display.DisplayObject;
 import flash.display.DisplayObjectContainer;
 import flash.geom.Point;
@@ -25,6 +26,8 @@ public class BodyData
 	protected var _bodyType:uint;
 	//角度
 	protected var _rotation:Number;
+	//弧度
+	protected var _radian:Number;
 	//刚体标签 定位刚体
 	protected var _bodyLabel:String
 	//是否为子弹 防止逃脱出物理引擎世界
@@ -35,6 +38,8 @@ public class BodyData
 	protected var _isWrapAround:Boolean;
 	//需要环绕的方向 0左右，1上下，2整个
 	protected var _wrapAroundDirection:int;
+	//纹理
+	protected var _texture:BitmapData;
 	public function BodyData() 
 	{
 		
@@ -156,6 +161,24 @@ public class BodyData
 	public function set wrapAroundDirection(value:int):void 
 	{
 		_wrapAroundDirection = value;
+	}
+	
+	/**
+	 * 纹理
+	 */
+	public function get texture():BitmapData{ return _texture; }
+	public function set texture(value:BitmapData):void 
+	{
+		_texture = value;
+	}
+	
+	/**
+	 * 弧度
+	 */
+	public function get radian():Number{ return _radian; }
+	public function set radian(value:Number):void 
+	{
+		_radian = value;
 	}
 
 }
