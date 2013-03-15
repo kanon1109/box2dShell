@@ -10,11 +10,6 @@ public class MarchingSquares
 {
 	// tolerance is the amount of alpha for a pixel to be considered solid
 	private var tolerance:Number = 0x01;
-	public function MarchingSquares() 
-	{
-		
-	}
-	
 	/**
 	 * 将png位图边缘生成一个点的坐标列表
 	 * @param	bitmapData 位图对象
