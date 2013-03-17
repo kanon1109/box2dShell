@@ -34,8 +34,10 @@ public class Texture
 		var length:int = vertices.length;
 		for (var i:int = 0; i < length; i += 1)
 		{
-			var posX:Number = vertices[i][0] * width * .5;
-			var posY:Number = vertices[i][1] * height * .5;
+			var arr:Array = vertices[i];
+			var posX:Number = arr[0] * width * .5;
+			var posY:Number = arr[1] * height * .5;
+			trace(posX, posY);
 			data.push(posX);
 			data.push(posY);
 			if (i > 0)
@@ -43,7 +45,7 @@ public class Texture
 		}
 		//一定要保存起点才能封闭整个路径
 		data.push(vertices[0][0] * width * .5);
-		data.push(vertices[0][1] * width * .5);
+		data.push(vertices[0][1] * height * .5);
 		commands.push(GraphicsPathCommand.LINE_TO);
 		return Texture.createBitmapFill(texture, commands, data, thickness, color);
 	}
@@ -68,8 +70,9 @@ public class Texture
 		var length:int = vertices.length;
 		for (var i:int = 0; i < length; i += 1)
 		{
-			var posX:Number = vertices[i][0];
-			var posY:Number = vertices[i][1];
+			var arr:Array = vertices[i];
+			var posX:Number = arr[0];
+			var posY:Number = arr[1];
 			data.push(posX);
 			data.push(posY);
 			if (i > 0)

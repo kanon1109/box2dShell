@@ -31,15 +31,15 @@ public class SliceTest extends Sprite
 		this.b2dShell.timeStep = 1.0 / 30.0;
 		this.b2dShell.velocityIterations = 10;
 		this.b2dShell.positionIterations = 10;
-		this.b2dShell.createWorld(0, 10, stage, true);
+		this.b2dShell.createWorld(0, 30, stage, true);
 		this.b2dShell.drawDebug(this);
 		//this.b2dShell.mouseEnabled = true;
 		
 		this.floorMc = this.getChildByName("floor_mc") as Sprite;
 		var polyData:PolyData = new PolyData();
 		polyData.friction = 5;
-		polyData.density = 1;
-		polyData.restitution = 0;
+		polyData.density = 2;
+		polyData.restitution = .1;
 		polyData.displayObject = this.floorMc;
 		polyData.boxPoint = new Point(this.floorMc.width *.5, this.floorMc.height *.5);
 		polyData.width = this.floorMc.width;
@@ -59,7 +59,7 @@ public class SliceTest extends Sprite
 		this.slice.mouseDraw = true;
 		
 		this.slice.addSliceBody(this.createRect());
-		this.slice.addSliceBody(this.createRect());
+		//this.slice.addSliceBody(this.createRect());
 		this.slice.addEventListener(PlugsEvent.SLICE_COMPLETE, sliceCompleteHandler);
 		
 		this.addEventListener(Event.ENTER_FRAME, enterFrameHandler);
@@ -67,15 +67,23 @@ public class SliceTest extends Sprite
 	
 	private function sliceCompleteHandler(event:PlugsEvent):void 
 	{
-		var bodyData:PolyData = event.data.bodyData as PolyData;
-		var texture:BitmapData = event.data.texture;
-		if (!texture) return;
-		bodyData.texture = texture;
-		bodyData.displayObject = Texture.createTextureByVertices(bodyData.vertices, texture, 1, 0x000000);
-		this.textureContainer.addChild(bodyData.displayObject)
-		var body:b2Body = this.b2dShell.createPoly(bodyData);
-		body.SetBullet(true);
-		this.slice.addSliceBody(body);
+		var bodyDataList:Array = event.data as Array;
+		var length:int = bodyDataList.length;
+		for (var i:int = 0; i < length; i += 1) 
+		{
+			var o:Object = bodyDataList[i];
+			var bodyData:PolyData = o.bodyData;
+			var texture:BitmapData = o.texture;
+			if (texture)
+			{
+				bodyData.texture = texture;
+				bodyData.displayObject = Texture.createTextureByVertices(o.shapeVertices, texture, 1, 0x000000);
+				this.textureContainer.addChild(bodyData.displayObject)
+			}
+			var body:b2Body = this.b2dShell.createPoly(bodyData);
+			body.SetBullet(true);
+			this.slice.addSliceBody(body);
+		}
 	}
 	
 	/**
@@ -85,17 +93,17 @@ public class SliceTest extends Sprite
 	private function createRect():b2Body
 	{
 		var polyData:PolyData = new PolyData();
-		polyData.friction = 1;
-		polyData.density = 1;
+		polyData.friction = .1;
+		polyData.density = 2;
 		polyData.restitution = .1;
 		polyData.bodyLabel = "rect";
-		polyData.boxPoint = new Point(100 / 2, 100 / 2);
-		polyData.width = 100;
-		polyData.height = 100;
-		polyData.postion = new Point(Random.randint(50, 300), Random.randint(50, 300));
+		polyData.boxPoint = new Point(150 / 2, 150 / 2);
+		polyData.width = 150;
+		polyData.height = 150;
+		polyData.postion = new Point(100, 100);
 		polyData.bodyType = b2Body.b2_dynamicBody;
 		
-		var MyClass:Class = getDefinitionByName("T" + 1) as Class;
+		var MyClass:Class = getDefinitionByName("Logo") as Class;
 		polyData.texture = new MyClass() as BitmapData;
 		polyData.displayObject = Texture.createTextureByBoxSize(polyData.width, polyData.height, polyData.texture, 1, 0x000000)
 		this.textureContainer.addChild(polyData.displayObject);
