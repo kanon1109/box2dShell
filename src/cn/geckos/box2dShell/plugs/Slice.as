@@ -35,13 +35,14 @@ public class Slice extends EventDispatcher
 	//是否使用鼠标绘制切割线条
 	private var _mouseDraw:Boolean;
 	//激光的进入点
-	private var entryPoint:Vector.<b2Vec2>;
+	private var entryPointDict:Dictionary;
 	//存放不需要切割的刚体
 	private var sliceDictionary:Dictionary;
 	public function Slice(b2dShell:B2dShell, stage:Stage, canvasContainer:DisplayObjectContainer = null)
 	{
 		this.b2dShell = b2dShell;
 		this.stage = stage;
+		this.entryPointDict = new Dictionary();
 		this.canvasContainer = canvasContainer;
 	}
 	
@@ -124,7 +125,6 @@ public class Slice extends EventDispatcher
 		if (this.sliceInPoint && this.sliceOutPoint && 
 			this.b2dShell && this.b2dShell.world && !this.isDrawing)
 		{
-			this.entryPoint = new Vector.<b2Vec2>();
 			//2d世界判断激光碰撞
 			this.b2dShell.world.RayCast(this.laserFired, this.sliceInPoint, this.sliceOutPoint);
 			this.b2dShell.world.RayCast(this.laserFired, this.sliceOutPoint, this.sliceInPoint);
@@ -147,16 +147,14 @@ public class Slice extends EventDispatcher
 		var affectedBody:b2Body = fixture.GetBody();
 		//如果没有添加进切割列表内则 返回并继续判断切割
 		if (this.sliceDictionary && !this.sliceDictionary[affectedBody]) return 1;
-		var fixtureIndex:int = this.entryPoint.indexOf(point);
-		trace("fixtureIndex", fixtureIndex);
-		if (fixtureIndex == -1)
+		if (!this.entryPointDict[affectedBody])
 		{
 			//如果之前激光没有碰到过 那么将切点坐标放进列表中
-			this.entryPoint.push(point);
+			this.entryPointDict[affectedBody] = point;
 		}
 		else
 		{
-			this.splitBody(affectedBody, this.entryPoint[fixtureIndex], point.Copy());
+			this.splitBody(affectedBody, this.entryPointDict[affectedBody], point.Copy());
 		}
 		return 1;
 	}
@@ -247,6 +245,7 @@ public class Slice extends EventDispatcher
 		bodyData.friction = fixture.GetFriction();
 		bodyData.restitution = fixture.GetRestitution();
 		bodyData.vertices = poly2Vertices;
+		bodyData.radian = sliceBody.GetAngle();
 		bodyData.postion = new Point(sliceBody.GetPosition().x * B2dShell.CONVERSION, 
 									 sliceBody.GetPosition().y * B2dShell.CONVERSION);
 		bodyData.bodyType = b2Body.b2_dynamicBody;
@@ -415,7 +414,7 @@ public class Slice extends EventDispatcher
 		this.sliceOutPoint = null;
 		this.removeCanvas();
 		this.removeMouseEvent();
-		this.entryPoint = null;
+		this.entryPointDict = null;
 		this.sliceDictionary = null;
 		this.stage = null;
 	}
