@@ -13,6 +13,7 @@ Thumbs.db
 /bin-release/*
 /bin/*
 /test/*.swf
+/test/*.html
 /*.swf
 
 .swf
