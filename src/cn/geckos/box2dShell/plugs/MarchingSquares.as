@@ -18,36 +18,36 @@ public class MarchingSquares
 	public function marchingSquares(bitmapData:BitmapData):Vector.<Point>
 	{
 			var contourVector:Vector.<Point> = new Vector.<Point>();
-			// this is the canvas we'll use to draw the contour
-			/*var canvas:Sprite=new Sprite();
-			addChild(canvas);
-			canvas.graphics.lineStyle(2,0x00ff00);*/
-			// getting the starting pixel
-			var startPoint:Point = getStartingPixel(bitmapData);
-			// if we found a starting pixel we can begin
+			// getting the starting pixel 找到起始像素
+			var startPoint:Point = this.getStartingPixel(bitmapData);
+			// if we found a starting pixel we can begin 如果我们找到了起始像素，就可以开始了
 			if (startPoint)
 			{
-				// moving the graphic pen to the starting pixel
-				//canvas.graphics.moveTo(startPoint.x,startPoint.y);
-				// pX and pY are the coordinates of the starting point
+				// moving the graphic pen to the starting pixel 把画笔移动到起始像素
+				// pX and pY are the coordinates of the starting point  pX，pY起始像素的x,y坐标
 				var pX:Number = startPoint.x;
 				var pY:Number = startPoint.y;
 				// stepX and stepY can be -1, 0 or 1 and represent the step in pixels to reach
 				// next contour point
+				// stepX 和stepY 可以是 -1, 0 or 1 代表将要到达像素的步骤
+				// 轮廓的下一个位置
 				var stepX:Number;
 				var stepY:Number;
 				// we also need to save the previous step, that's why we use prevX and prevY
+				// 我们同样需要保存上一步, 这就是我们使用prevX和prevY的原因
 				var prevX:Number;
 				var prevY:Number;
 				// closedLoop will be true once we traced the full contour
+				// 如果我们描绘了整个轮廓 closedLoop 会是true
 				var closedLoop:Boolean = false;
 				while (!closedLoop) 
 				{
 					// the core of the script is getting the 2x2 square value of each pixel
-					var squareValue:Number = getSquareValue(pX, pY, bitmapData);
+					// 脚本的核心是得到2x2正方形每个像素的值
+					var squareValue:Number = this.getSquareValue(pX, pY, bitmapData);
 					switch (squareValue)
 					{
-							/* going UP with these cases:
+							/* going UP with these cases: 以下情况向上:
 							
 							+---+---+   +---+---+   +---+---+
 							| 1 |   |   | 1 |   |   | 1 |   |
@@ -62,7 +62,7 @@ public class MarchingSquares
 							stepX = 0;
 							stepY = -1;
 							break;
-							/* going DOWN with these cases:
+							/* going DOWN with these cases: 以下情况向下:
 							
 							+---+---+   +---+---+   +---+---+
 							|   |   |   |   | 2 |   | 1 | 2 |
@@ -77,7 +77,7 @@ public class MarchingSquares
 							stepX = 0;
 							stepY = 1;
 							break;
-							/* going LEFT with these cases:
+							/* going LEFT with these cases: 以下情况向左:
 							
 							+---+---+   +---+---+   +---+---+
 							|   |   |   |   |   |   |   | 2 |
@@ -92,7 +92,7 @@ public class MarchingSquares
 							stepX = -1;
 							stepY = 0;
 							break;
-							/* going RIGHT with these cases:
+							/* going RIGHT with these cases: 以下情况向右:
 							
 							+---+---+   +---+---+   +---+---+
 							|   | 2 |   | 1 | 2 |   | 1 | 2 |
@@ -108,7 +108,7 @@ public class MarchingSquares
 							stepY = 0;
 							break;
 						case 6 :
-							/* special saddle point case 1:
+							/* special saddle point case 1: 特殊鞍点:
 							
 							+---+---+ 
 							|   | 2 | 
@@ -118,6 +118,7 @@ public class MarchingSquares
 							
 							going LEFT if coming from UP
 							else going RIGHT 
+							如果从上方来则向左否则向右
 							
 							*/
 							if (prevX == 0 && prevY == -1) 
@@ -131,7 +132,7 @@ public class MarchingSquares
 							}
 							break;
 						case 9 :
-						/* special saddle point case 2:
+						/* special saddle point case 2: 的特殊鞍点:
 							
 							+---+---+ 
 							| 1 |   | 
@@ -141,7 +142,8 @@ public class MarchingSquares
 							
 							going UP if coming from RIGHT
 							else going DOWN 
-							
+						    如果从右边来就向上
+							否则向下
 							*/
 							if (prevX == 1 && prevY == 0) 
 							{
@@ -155,16 +157,16 @@ public class MarchingSquares
 							}
 							break;
 					}
-					// moving onto next point
+					// moving onto next point 移到下一个点
 					pX += stepX;
 					pY += stepY;
 					// saving contour point
+					//保存顶点
 					contourVector.push(new Point(pX, pY));
 					prevX = stepX;
 					prevY = stepY;
-					//  drawing the line
-					//canvas.graphics.lineTo(pX, pY);
 					// if we returned to the first point visited, the loop has finished
+					//如果我们到达起始点则循环结束;
 					if (pX == startPoint.x && pY == startPoint.y) 
 						closedLoop = true;
 				}
@@ -176,6 +178,7 @@ public class MarchingSquares
 		{
 			// finding the starting pixel is a matter of brute force, we need to scan
 			// the image pixel by pixel until we find a non-transparent pixel
+			//我们需要一个像素一个像素的 扫描整个图片，直到找到非透明像素。
 			var zeroPoint:Point = new Point(0, 0);
 			var offsetPoint:Point = new Point(0, 0);
 			for (var i:Number = 0; i < bitmapData.height; i++)
@@ -195,11 +198,11 @@ public class MarchingSquares
 		{
 			/*
 			checking the 2x2 pixel grid, assigning these values to each pixel, if not transparent
-			
+			检测2x2 像素网格, 如果不透明就把相应位置值赋给相应像素
 			+---+---+
 			| 1 | 2 |
 			+---+---+
-			| 4 | 8 | <- current pixel (pX,pY)
+			| 4 | 8 | <- current pixel (pX,pY) 当前像素位置(pX,pY)
 			+---+---+
 			*/
 			var squareValue:Number = 0;
@@ -221,6 +224,7 @@ public class MarchingSquares
 		private function getAlphaValue(n:Number):Number 
 		{
 			// given an ARGB color value, returns the alpha 0 -> 255
+			// 给予一个 ARGB颜色值, 返回alpha 0 -> 255
 			return n >> 24 & 0xFF;
 		}
 	

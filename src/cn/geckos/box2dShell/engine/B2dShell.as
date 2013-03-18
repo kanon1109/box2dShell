@@ -210,6 +210,7 @@ public class B2dShell
 			 * fixtureDef.shape = boxShape;
 			 * this.body.CreateFixture(fixtureDef)
 			 */
+			//把非凸多边形分离成凸多边形
 			if (!this.separator)
 				this.separator = new b2Separator();
 			this.separator.Separate(this.body, this.fixtureDef, vertices);

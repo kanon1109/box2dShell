@@ -34,8 +34,6 @@ public class Slice extends EventDispatcher
 	private var canvas:Sprite;
 	//是否使用鼠标绘制切割线条
 	private var _mouseDraw:Boolean;
-	//受激光影响的刚体列表
-	private var affectedByLaser:Vector.<b2Body>
 	//激光的进入点
 	private var entryPoint:Vector.<b2Vec2>;
 	//存放不需要切割的刚体
@@ -126,7 +124,6 @@ public class Slice extends EventDispatcher
 		if (this.sliceInPoint && this.sliceOutPoint && 
 			this.b2dShell && this.b2dShell.world && !this.isDrawing)
 		{
-			this.affectedByLaser = new Vector.<b2Body>();
 			this.entryPoint = new Vector.<b2Vec2>();
 			//2d世界判断激光碰撞
 			this.b2dShell.world.RayCast(this.laserFired, this.sliceInPoint, this.sliceOutPoint);
@@ -150,11 +147,11 @@ public class Slice extends EventDispatcher
 		var affectedBody:b2Body = fixture.GetBody();
 		//如果没有添加进切割列表内则 返回并继续判断切割
 		if (this.sliceDictionary && !this.sliceDictionary[affectedBody]) return 1;
-		var fixtureIndex:int = this.affectedByLaser.indexOf(affectedBody);
+		var fixtureIndex:int = this.entryPoint.indexOf(point);
+		trace("fixtureIndex", fixtureIndex);
 		if (fixtureIndex == -1)
 		{
-			//如果之前激光没有碰到过 那么将碰到的刚体和切点坐标放进列表中
-			this.affectedByLaser.push(affectedBody);
+			//如果之前激光没有碰到过 那么将切点坐标放进列表中
 			this.entryPoint.push(point);
 		}
 		else
@@ -316,9 +313,9 @@ public class Slice extends EventDispatcher
 		{
 			d = det(C.x, C.y, D.x, D.y, vec[i].x, vec[i].y);
 			if (d < 0)
-				tempVec[i1++]=vec[i];
+				tempVec[i1++] = vec[i];
 			else
-				tempVec[i2--]=vec[i];
+				tempVec[i2--] = vec[i];
 		}
 		tempVec[i1] = vec[n - 1];
 		return tempVec;
@@ -418,9 +415,7 @@ public class Slice extends EventDispatcher
 		this.sliceOutPoint = null;
 		this.removeCanvas();
 		this.removeMouseEvent();
-		this.affectedByLaser = null;
 		this.entryPoint = null;
-		this.affectedByLaser = null;
 		this.sliceDictionary = null;
 		this.stage = null;
 	}

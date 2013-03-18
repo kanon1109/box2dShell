@@ -71,6 +71,9 @@ public class MarchingSquaresTest extends Sprite
 		
 		var vertices:Array = [];
 		var length:int = marchingVector.length;
+		//最重要的 - 我们需要一个b2Vec2 vector实例这样我们可以传递顶点 
+		// 记住，我们的定点是顺时针! 更多信息参考b2Separator.Separate()方法.
+		// 注意我是如何逆序vector的。
 		for (i = marchingVector.length - 1; i >= 0; i--) 
 		{
 			if (i % 10 == 0) 
@@ -88,7 +91,6 @@ public class MarchingSquaresTest extends Sprite
 		polyData.vertices = vertices;
 		polyData.bodyType = b2Body.b2_dynamicBody;
 		this.b2dShell.createPoly(polyData);
-		
 		this.addEventListener(Event.ENTER_FRAME, enterFrameHandler);
 	}
 	
