@@ -6,10 +6,12 @@ import cn.geckos.box2dShell.engine.B2dShell;
 import cn.geckos.box2dShell.plugs.event.PlugsEvent;
 import cn.geckos.box2dShell.plugs.Slice;
 import cn.geckos.box2dShell.plugs.Texture;
+import cn.geckos.ChainEffect;
 import cn.geckos.utils.Random;
 import flash.display.BitmapData;
 import flash.display.Sprite;
 import flash.events.Event;
+import flash.events.KeyboardEvent;
 import flash.geom.Point;
 import flash.utils.getDefinitionByName;
 /**
@@ -25,12 +27,13 @@ public class SliceTest extends Sprite
 	private var textureContainer:Sprite;
 	//线条容器
 	private var canvasContainer:Sprite;
+	private var chainEffect:ChainEffect;
 	public function SliceTest() 
 	{
 		this.b2dShell = new B2dShell();
 		this.b2dShell.timeStep = 1.0 / 30.0;
-		this.b2dShell.velocityIterations = 10;
-		this.b2dShell.positionIterations = 10;
+		this.b2dShell.velocityIterations = 90;
+		this.b2dShell.positionIterations = 90;
 		this.b2dShell.createWorld(0, 30, stage, true);
 		this.b2dShell.drawDebug(this);
 		//this.b2dShell.mouseEnabled = true;
@@ -53,16 +56,28 @@ public class SliceTest extends Sprite
 		this.canvasContainer = new Sprite();
 		this.addChild(this.textureContainer);
 		this.addChild(this.canvasContainer);
-		
+		var bodyList:Array = [];
+		bodyList.push(this.createRect());
+		bodyList.push(this.createRect());
 		
 		this.slice = new Slice(this.b2dShell, stage, this.canvasContainer);
 		this.slice.mouseDraw = true;
+		this.slice.initSliceBody(bodyList);
 		
-		this.slice.addSliceBody(this.createRect());
-		//this.slice.addSliceBody(this.createRect());
 		this.slice.addEventListener(PlugsEvent.SLICE_COMPLETE, sliceCompleteHandler);
 		
+		this.chainEffect = new ChainEffect(this);
+		this.chainEffect.chainLength = 4;
+		this.chainEffect.move(mouseX, mouseY);
+		
+		stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler);
+		
 		this.addEventListener(Event.ENTER_FRAME, enterFrameHandler);
+	}
+	
+	private function keyDownHandler(event:KeyboardEvent):void 
+	{
+		this.chainEffect.clear();
 	}
 	
 	private function sliceCompleteHandler(event:PlugsEvent):void 
@@ -82,7 +97,6 @@ public class SliceTest extends Sprite
 			}
 			var body:b2Body = this.b2dShell.createPoly(bodyData);
 			body.SetBullet(true);
-			this.slice.addSliceBody(body);
 		}
 	}
 	
@@ -102,7 +116,6 @@ public class SliceTest extends Sprite
 		polyData.height = 150;
 		polyData.postion = new Point(100, 100);
 		polyData.bodyType = b2Body.b2_dynamicBody;
-		
 		var MyClass:Class = getDefinitionByName("Logo") as Class;
 		polyData.texture = new MyClass() as BitmapData;
 		polyData.displayObject = Texture.createTextureByBoxSize(polyData.width, polyData.height, polyData.texture, 1, 0x000000)
@@ -112,6 +125,7 @@ public class SliceTest extends Sprite
 	
 	private function enterFrameHandler(event:Event):void 
 	{
+		this.chainEffect.render(mouseX, mouseY, .5);
 		if (this.slice)
 			this.slice.update();
 		this.b2dShell.render();

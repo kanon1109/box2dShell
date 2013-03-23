@@ -103,6 +103,7 @@ public class FlyArrow
 			userData.params.freeFlight = true;
 			body.SetBullet(false);
 			this.removeBodyDispatcher(body, preSolveListener);
+			this.arrowDict[body] = null;
 			delete this.arrowDict[body];
 		}
 	}
@@ -201,6 +202,7 @@ public class FlyArrow
 				body.SetBullet(false);
 				this.removeBodyDispatcher(body, preSolveListener);
 				this.b2dShell.destroyBody(body);
+				this.arrowDict[body] = null;
 				delete this.arrowDict[body];
 			}
 		}
@@ -249,6 +251,7 @@ public class FlyArrow
 					{
 						body.SetBullet(false);
 						this.removeBodyDispatcher(body, preSolveListener);
+						this.arrowDict[body] = null;
 						delete this.arrowDict[body];
 					}
 				}
@@ -277,7 +280,10 @@ public class FlyArrow
 	{
 		if (!this.contactDict) return;
 		if (this.contactDict[str])
+		{
+			this.contactDict[str] = null;
 			delete this.contactDict[str];
+		}
 	}
 	
 	/**

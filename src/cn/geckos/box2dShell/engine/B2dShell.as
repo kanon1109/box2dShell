@@ -476,6 +476,38 @@ public class B2dShell
 	}
 	
 	/**
+	 * 查找多边形的中心
+	 * @param	vs    	   多边形顶点坐标
+	 * @param	count      顶点数量
+	 * @return  中心坐标
+	 */
+	private function findCentroid(vs:Vector.<b2Vec2>, count:uint):b2Vec2
+	{
+		var c:b2Vec2 = new b2Vec2();
+		var area:Number = 0.0;
+		var p1X:Number = 0.0;
+		var p1Y:Number = 0.0;
+		var inv3:Number = 1.0 / 3.0;
+		for (var i:int = 0; i < count; ++i)
+		{
+			var p2:b2Vec2 = vs[i];
+			var p3:b2Vec2 = i + 1 < count ? vs[int(i + 1)] : vs[0];
+			var e1X:Number = p2.x - p1X;
+			var e1Y:Number = p2.y - p1Y;
+			var e2X:Number = p3.x - p1X;
+			var e2Y:Number = p3.y - p1Y;
+			var D:Number = (e1X * e2Y - e1Y * e2X);
+			var triangleArea:Number = 0.5 * D;
+			area += triangleArea;
+			c.x += triangleArea * inv3 * (p1X + p2.x + p3.x);
+			c.y += triangleArea * inv3 * (p1Y + p2.y + p3.y);
+		}
+		c.x *= 1.0 / area;
+		c.y *= 1.0 / area;
+		return c;
+	}
+	
+	/**
 	 * 缩放刚体
 	 * @param	body      被缩放的刚体
 	 * @param	sizeRatio 缩放比例
@@ -598,6 +630,7 @@ public class B2dShell
 			{
 				body.GetWorld().DestroyJoint(j.joint);
 			}
+			this.destroyJointDict[body] = null;
 			delete this.destroyJointDict[body];
 		}
 	}
@@ -940,6 +973,7 @@ public class B2dShell
 		if (!this.destroyJointDict) return;
 		for each (var body:b2Body in this.destroyJointDict) 
 		{
+			this.destroyJointDict[body] = null;
 			delete this.destroyJointDict[body];
 		}
 	}

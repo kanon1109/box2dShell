@@ -14,7 +14,6 @@ import flash.display.Stage;
 import flash.events.EventDispatcher;
 import flash.events.MouseEvent;
 import flash.geom.Point;
-import flash.utils.Dictionary;
 /**
  * ...切片插件 将刚体切片
  * @author Kanon
@@ -25,45 +24,26 @@ public class Slice extends EventDispatcher
 	private var stage:Stage;
 	//绘制用的容器
 	private var _canvasContainer:DisplayObjectContainer;
-	//切入切出点
-	private var sliceInPoint:b2Vec2;
-	private var sliceOutPoint:b2Vec2;
-	//是否在绘制线段
-	private var isDrawing:Boolean;
+	//切入点
+	private var begX:Number; 
+	private var begY:Number;
+	//切出点
+	private var endX:Number;
+	private var endY:Number;
 	//切割线条的画布
 	private var canvas:Sprite;
 	//是否使用鼠标绘制切割线条
 	private var _mouseDraw:Boolean;
+	//鼠标是否放开了
+	private var mouseReleased:Boolean;
 	//激光的进入点
-	private var entryPointDict:Dictionary;
-	//存放不需要切割的刚体
-	private var sliceDictionary:Dictionary;
+	private var enterPointsVec:Vector.<b2Vec2>;
+	private var numEnterPoints:int;
 	public function Slice(b2dShell:B2dShell, stage:Stage, canvasContainer:DisplayObjectContainer = null)
 	{
 		this.b2dShell = b2dShell;
 		this.stage = stage;
-		this.entryPointDict = new Dictionary();
 		this.canvasContainer = canvasContainer;
-	}
-	
-	/**
-	 * 设置切割点
-	 * @param	x       切割点x坐标
-	 * @param	y		切割点y坐标
-	 * @param	input   是切入还是切出，true为切入。
-	 */
-	public function setSlicePoint(x:Number, y:Number, input:Boolean = true):void
-	{
-		if (input)
-		{
-			if (!this.sliceInPoint)
-				this.sliceInPoint = new b2Vec2(x / B2dShell.CONVERSION, y / B2dShell.CONVERSION);
-		}
-		else
-		{
-			if (!this.sliceOutPoint)
-				this.sliceOutPoint = new b2Vec2(x / B2dShell.CONVERSION, y / B2dShell.CONVERSION);
-		}
 	}
 	
 	/**
@@ -78,43 +58,39 @@ public class Slice extends EventDispatcher
 	}
 	
 	/**
-	 * 初始化stage
-	 * @param	stage  舞台
+	 * 初始化鼠标事件
 	 */
-	private function initStage(stage:Stage):void
+	private function initMouseEvent():void
 	{
-		this.stage = stage;
 		this.stage.addEventListener(MouseEvent.MOUSE_DOWN, mouseDownHander);
-		this.stage.addEventListener(MouseEvent.MOUSE_UP, mouseUpHander);
 	}
 	
 	private function mouseDownHander(event:MouseEvent):void
 	{
-		this.isDrawing = true;
 		this.stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHander);
-		this.setSlicePoint(this.stage.mouseX, this.stage.mouseY);
+		this.stage.addEventListener(MouseEvent.MOUSE_UP, mouseUpHander);
+		this.begX = this.stage.mouseX; 
+		this.begY = this.stage.mouseY;
 	}
 	
 	private function mouseMoveHander(event:MouseEvent):void
 	{
-		if (this.isDrawing)
+		if (this.canvas)
 		{
-			if (this.canvas)
-			{
-				this.canvas.graphics.clear();
-				this.canvas.graphics.lineStyle(1.5, 0xFFF0000);
-				this.canvas.graphics.moveTo(sliceInPoint.x * B2dShell.CONVERSION, sliceInPoint.y * B2dShell.CONVERSION);
-				this.canvas.graphics.lineTo(this.stage.mouseX, this.stage.mouseY);
-			}
+			this.canvas.graphics.clear();
+			this.canvas.graphics.lineStyle(1.5, 0xFFF0000);
+			this.canvas.graphics.moveTo(this.begX, this.begY);
+			this.canvas.graphics.lineTo(this.stage.mouseX, this.stage.mouseY);
 		}
 	}
 	
 	private function mouseUpHander(event:MouseEvent):void
 	{
-		this.isDrawing = false;
+		this.mouseReleased = true;
+		this.stage.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHander);
+		this.stage.removeEventListener(MouseEvent.MOUSE_UP, mouseUpHander);
 		if (this.canvas)
 			this.canvas.graphics.clear();
-		this.setSlicePoint(this.stage.mouseX, this.stage.mouseY, false);
 	}
 	
 	/**
@@ -122,14 +98,19 @@ public class Slice extends EventDispatcher
 	 */
 	public function update():void
 	{
-		if (this.sliceInPoint && this.sliceOutPoint && 
-			this.b2dShell && this.b2dShell.world && !this.isDrawing)
+		if (this.b2dShell && 
+			this.b2dShell.world && 
+			this.mouseReleased)
 		{
+			this.endX = this.stage.mouseX;
+			this.endY = this.stage.mouseY;
+			var p1:b2Vec2 = new b2Vec2(this.begX / B2dShell.CONVERSION, this.begY / B2dShell.CONVERSION);
+			var p2:b2Vec2 = new b2Vec2(this.endX / B2dShell.CONVERSION, this.endY / B2dShell.CONVERSION);
 			//2d世界判断激光碰撞
-			this.b2dShell.world.RayCast(this.laserFired, this.sliceInPoint, this.sliceOutPoint);
-			this.b2dShell.world.RayCast(this.laserFired, this.sliceOutPoint, this.sliceInPoint);
-			this.sliceInPoint = null;
-			this.sliceOutPoint = null;
+			this.b2dShell.world.RayCast(this.laserFired, p1, p2);
+			this.b2dShell.world.RayCast(this.laserFired, p2, p1);
+			this.enterPointsVec = new Vector.<b2Vec2>(this.numEnterPoints);
+			this.mouseReleased = false;
 		}
 	}
 	
@@ -143,18 +124,20 @@ public class Slice extends EventDispatcher
 	 */
 	private function laserFired(fixture:b2Fixture, point:b2Vec2, normal:b2Vec2, fraction:Number):Number
 	{
+		if (!this.enterPointsVec) return 0;
 		//受到激光影响的刚体
 		var affectedBody:b2Body = fixture.GetBody();
-		//如果没有添加进切割列表内则 返回并继续判断切割
-		if (this.sliceDictionary && !this.sliceDictionary[affectedBody]) return 1;
-		if (!this.entryPointDict[affectedBody])
+		var userData:Object = affectedBody.GetUserData();
+		if (!userData || !userData.params || isNaN(userData.params.sliceId)) return 1;
+		if(!this.enterPointsVec[userData.params.sliceId])
 		{
 			//如果之前激光没有碰到过 那么将切点坐标放进列表中
-			this.entryPointDict[affectedBody] = point;
+			this.enterPointsVec[userData.params.sliceId] = point;
 		}
 		else
 		{
-			this.splitBody(affectedBody, this.entryPointDict[affectedBody], point.Copy());
+			var b2v:b2Vec2 = this.enterPointsVec[userData.params.sliceId];
+			this.splitBody(affectedBody, b2v, point.Copy());
 		}
 		return 1;
 	}
@@ -194,7 +177,7 @@ public class Slice extends EventDispatcher
 		for (var i:int = 0; i < numVertices; i += 1)
 		{
 			d = det(A.x, A.y, B.x, B.y, polyVertices[i].x, polyVertices[i].y);
-			if (d > 0) 
+			if (d > 0)
 				shape1Vertices.push(polyVertices[i]);
 			else 
 				shape2Vertices.push(polyVertices[i]);
@@ -204,6 +187,9 @@ public class Slice extends EventDispatcher
 		// I call my custom method, arrangeClockwise(), which takes as a parameter a vector, representing the coordinates of the shape's vertices and returns a new vector, with the same points arranged clockwise.
 		shape1Vertices = this.arrangeClockwise(shape1Vertices);
 		shape2Vertices = this.arrangeClockwise(shape2Vertices);
+		
+		//获取切割id
+		var origUserDataId:int = sliceBody.GetUserData().params.sliceId;
 		
 		var poly1Vertices:Array = [];
 		var poly2Vertices:Array = [];
@@ -226,6 +212,8 @@ public class Slice extends EventDispatcher
 		bodyData.friction = fixture.GetFriction();
 		bodyData.restitution = fixture.GetRestitution();
 		bodyData.vertices = poly1Vertices;
+		bodyData.radian = sliceBody.GetAngle();
+		bodyData.params = { "sliceId": origUserDataId };
 		bodyData.postion = new Point(sliceBody.GetPosition().x * B2dShell.CONVERSION, 
 									 sliceBody.GetPosition().y * B2dShell.CONVERSION);
 		bodyData.bodyType = b2Body.b2_dynamicBody;
@@ -239,6 +227,8 @@ public class Slice extends EventDispatcher
 			texture = userData.texture;
 		bodyDataList.push( { "bodyData":bodyData, "texture":texture, "shapeVertices":poly1Vertices } );
 		
+		this.enterPointsVec[origUserDataId] = null;
+		
 		//创建另一个刚体
 		bodyData = new PolyData();
 		bodyData.density = fixture.GetDensity();
@@ -246,10 +236,14 @@ public class Slice extends EventDispatcher
 		bodyData.restitution = fixture.GetRestitution();
 		bodyData.vertices = poly2Vertices;
 		bodyData.radian = sliceBody.GetAngle();
+		bodyData.params = { "sliceId": this.numEnterPoints };
 		bodyData.postion = new Point(sliceBody.GetPosition().x * B2dShell.CONVERSION, 
 									 sliceBody.GetPosition().y * B2dShell.CONVERSION);
 		bodyData.bodyType = b2Body.b2_dynamicBody;
 		bodyDataList.push( { "bodyData":bodyData, "texture":texture, "shapeVertices":poly2Vertices } );
+		
+		this.enterPointsVec.push(null);
+		this.numEnterPoints++;
 		
 		//发送事件出去，外部根据事件穿的多边形对象选择是否创建一个新刚体。
 		var event:PlugsEvent = new PlugsEvent(PlugsEvent.SLICE_COMPLETE);
@@ -363,31 +357,27 @@ public class Slice extends EventDispatcher
 	{
 		if (this.stage)
 		{
-			this.stage.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHander);
 			this.stage.removeEventListener(MouseEvent.MOUSE_DOWN, mouseDownHander);
+			this.stage.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHander);
 			this.stage.removeEventListener(MouseEvent.MOUSE_UP, mouseUpHander);
 		}
 	}
 	
 	/**
-	 * 添加需要被切割的刚体
-	 * @param	body  需要被切割的刚体
+	 * 初始化需要被切割的刚体 
+	 * @param	bodyList  需要被切割的刚体列表
 	 */
-	public function addSliceBody(body:b2Body):void
+	public function initSliceBody(bodyList:Array):void
 	{
-		if (!this.sliceDictionary)
-			this.sliceDictionary = new Dictionary();
-		this.sliceDictionary[body] = body;
-	}
-	
-	/**
-	 * 删除添加进需要被切割的刚体列表内的刚体
-	 * @param	body  不需要被切割的刚体
-	 */
-	public function deleteSliceBody(body:b2Body):void
-	{
-		if (!this.sliceDictionary) return;
-		delete this.sliceDictionary[body];
+		if (!bodyList || bodyList.length == 0) return;
+		this.numEnterPoints = 0;
+		for each (var body:b2Body in bodyList) 
+		{
+			var userData:Object = this.b2dShell.getUserDataByBody(body);
+			userData.params = { "sliceId":this.numEnterPoints };
+			this.numEnterPoints++;
+		}
+		this.enterPointsVec = new Vector.<b2Vec2>(this.numEnterPoints);
 	}
 	
 	/**
@@ -410,12 +400,9 @@ public class Slice extends EventDispatcher
 	public function destroy():void
 	{
 		this.b2dShell = null;
-		this.sliceInPoint = null;
-		this.sliceOutPoint = null;
 		this.removeCanvas();
 		this.removeMouseEvent();
-		this.entryPointDict = null;
-		this.sliceDictionary = null;
+		this.enterPointsVec = null;
 		this.stage = null;
 	}
 	
@@ -432,13 +419,13 @@ public class Slice extends EventDispatcher
 		_mouseDraw = value;
 		if (this.mouseDraw)
 		{
-			this.initCanvas();
-			this.initStage(this.stage);
+			this.initMouseEvent();
+			//this.initCanvas();
 		}
 		else
 		{
 			this.removeMouseEvent();
-			this.removeCanvas();
+			//this.removeCanvas();
 		}
 	}
 	

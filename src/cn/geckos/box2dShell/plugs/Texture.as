@@ -37,7 +37,6 @@ public class Texture
 			var arr:Array = vertices[i];
 			var posX:Number = arr[0] * width * .5;
 			var posY:Number = arr[1] * height * .5;
-			trace(posX, posY);
 			data.push(posX);
 			data.push(posY);
 			if (i > 0)
