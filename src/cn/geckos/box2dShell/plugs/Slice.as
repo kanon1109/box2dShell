@@ -8,11 +8,8 @@ import cn.geckos.box2dShell.data.PolyData;
 import cn.geckos.box2dShell.engine.B2dShell;
 import cn.geckos.box2dShell.plugs.event.PlugsEvent;
 import flash.display.BitmapData;
-import flash.display.DisplayObjectContainer;
-import flash.display.Sprite;
 import flash.display.Stage;
 import flash.events.EventDispatcher;
-import flash.events.MouseEvent;
 import flash.geom.Point;
 /**
  * ...切片插件 将刚体切片
@@ -22,95 +19,41 @@ public class Slice extends EventDispatcher
 {
 	private var b2dShell:B2dShell;
 	private var stage:Stage;
-	//绘制用的容器
-	private var _canvasContainer:DisplayObjectContainer;
 	//切入点
 	private var begX:Number; 
 	private var begY:Number;
 	//切出点
 	private var endX:Number;
 	private var endY:Number;
-	//切割线条的画布
-	private var canvas:Sprite;
-	//是否使用鼠标绘制切割线条
-	private var _mouseDraw:Boolean;
-	//鼠标是否放开了
-	private var mouseReleased:Boolean;
 	//激光的进入点
 	private var enterPointsVec:Vector.<b2Vec2>;
 	private var numEnterPoints:int;
-	public function Slice(b2dShell:B2dShell, stage:Stage, canvasContainer:DisplayObjectContainer = null)
+	public function Slice(b2dShell:B2dShell, stage:Stage)
 	{
 		this.b2dShell = b2dShell;
 		this.stage = stage;
-		this.canvasContainer = canvasContainer;
-	}
-	
-	/**
-	 * 初始化画布
-	 */
-	private function initCanvas():void
-	{
-		if (this.canvas || !this.canvasContainer)
-			return;
-		this.canvas = new Sprite();
-		this.canvasContainer.addChild(this.canvas);
-	}
-	
-	/**
-	 * 初始化鼠标事件
-	 */
-	private function initMouseEvent():void
-	{
-		this.stage.addEventListener(MouseEvent.MOUSE_DOWN, mouseDownHander);
-	}
-	
-	private function mouseDownHander(event:MouseEvent):void
-	{
-		this.stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHander);
-		this.stage.addEventListener(MouseEvent.MOUSE_UP, mouseUpHander);
-		this.begX = this.stage.mouseX; 
-		this.begY = this.stage.mouseY;
-	}
-	
-	private function mouseMoveHander(event:MouseEvent):void
-	{
-		if (this.canvas)
-		{
-			this.canvas.graphics.clear();
-			this.canvas.graphics.lineStyle(1.5, 0xFFF0000);
-			this.canvas.graphics.moveTo(this.begX, this.begY);
-			this.canvas.graphics.lineTo(this.stage.mouseX, this.stage.mouseY);
-		}
-	}
-	
-	private function mouseUpHander(event:MouseEvent):void
-	{
-		this.mouseReleased = true;
-		this.stage.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHander);
-		this.stage.removeEventListener(MouseEvent.MOUSE_UP, mouseUpHander);
-		if (this.canvas)
-			this.canvas.graphics.clear();
 	}
 	
 	/**
 	 * 更新切割状态
+	 * @param	begX   起始点x
+	 * @param	begY   起始点y
+	 * @param	endX   结束点x
+	 * @param	endY   结束点y
 	 */
-	public function update():void
+	public function update(begX:Number, begY:Number, endX:Number, endY:Number):void
 	{
+		if (isNaN(begX) || isNaN(begY) || 
+			isNaN(endX) || isNaN(endY)) return;
 		if (this.b2dShell && 
-			this.b2dShell.world && 
-			this.mouseReleased)
+			this.b2dShell.world)
 		{
-			this.endX = this.stage.mouseX;
-			this.endY = this.stage.mouseY;
-			var p1:b2Vec2 = new b2Vec2(this.begX / B2dShell.CONVERSION, this.begY / B2dShell.CONVERSION);
-			var p2:b2Vec2 = new b2Vec2(this.endX / B2dShell.CONVERSION, this.endY / B2dShell.CONVERSION);
+			var p1:b2Vec2 = new b2Vec2(begX / B2dShell.CONVERSION, begY / B2dShell.CONVERSION);
+			var p2:b2Vec2 = new b2Vec2(endX / B2dShell.CONVERSION, endY / B2dShell.CONVERSION);
 			//2d世界判断激光碰撞
 			this.b2dShell.world.RayCast(this.laserFired, p1, p2);
 			this.b2dShell.world.RayCast(this.laserFired, p2, p1);
 			this.enterPointsVec = new Vector.<b2Vec2>(this.numEnterPoints);
-			this.mouseReleased = false;
 		}
 	}
 	
@@ -349,19 +292,6 @@ public class Slice extends EventDispatcher
 		// Another useful thing about determinants is that their absolute value is two times the face of the triangle, formed by the three given points.
 		return x1 * y2 + x2 * y3 + x3 * y1 - y1 * x2 - y2 * x3 - y3 * x1;
 	}
- 
-	/**
-	 * 销毁鼠标事件
-	 */
-	private function removeMouseEvent():void
-	{
-		if (this.stage)
-		{
-			this.stage.removeEventListener(MouseEvent.MOUSE_DOWN, mouseDownHander);
-			this.stage.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHander);
-			this.stage.removeEventListener(MouseEvent.MOUSE_UP, mouseUpHander);
-		}
-	}
 	
 	/**
 	 * 初始化需要被切割的刚体 
@@ -381,65 +311,13 @@ public class Slice extends EventDispatcher
 	}
 	
 	/**
-	 * 销毁画布
-	 */
-	private function removeCanvas():void
-	{
-		if (this.canvas && this.canvas.parent)
-		{
-			this.canvas.graphics.clear();
-			this.canvas.parent.removeChild(this.canvas);
-		}
-		this.canvas = null;
-		this.canvasContainer = null;
-	}
-	
-	/**
 	 * 销毁方法
 	 */
 	public function destroy():void
 	{
-		this.b2dShell = null;
-		this.removeCanvas();
-		this.removeMouseEvent();
 		this.enterPointsVec = null;
+		this.b2dShell = null;
 		this.stage = null;
-	}
-	
-	/**
-	 * 是否使用鼠标绘制切割线条
-	 */
-	public function get mouseDraw():Boolean
-	{
-		return _mouseDraw;
-	}
-	
-	public function set mouseDraw(value:Boolean):void
-	{
-		_mouseDraw = value;
-		if (this.mouseDraw)
-		{
-			this.initMouseEvent();
-			//this.initCanvas();
-		}
-		else
-		{
-			this.removeMouseEvent();
-			//this.removeCanvas();
-		}
-	}
-	
-	/**
-	 * 绘制容器
-	 */
-	public function get canvasContainer():DisplayObjectContainer
-	{
-		return _canvasContainer;
-	}
-	
-	public function set canvasContainer(value:DisplayObjectContainer):void
-	{
-		_canvasContainer = value;
 	}
 }
 }

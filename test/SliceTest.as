@@ -7,11 +7,10 @@ import cn.geckos.box2dShell.plugs.event.PlugsEvent;
 import cn.geckos.box2dShell.plugs.Slice;
 import cn.geckos.box2dShell.plugs.Texture;
 import cn.geckos.ChainEffect;
-import cn.geckos.utils.Random;
 import flash.display.BitmapData;
 import flash.display.Sprite;
 import flash.events.Event;
-import flash.events.KeyboardEvent;
+import flash.events.MouseEvent;
 import flash.geom.Point;
 import flash.utils.getDefinitionByName;
 /**
@@ -27,7 +26,19 @@ public class SliceTest extends Sprite
 	private var textureContainer:Sprite;
 	//线条容器
 	private var canvasContainer:Sprite;
+	//切割线条的画布
+	private var canvas:Sprite;
 	private var chainEffect:ChainEffect;
+	//鼠标是否放开了
+	private var mouseReleased:Boolean;
+	//鼠标是否点击
+	private var mouseDown:Boolean;
+	//起始点
+	private var begX:Number;
+	private var begY:Number;
+	//结束点
+	private var endX:Number;
+	private var endY:Number;
 	public function SliceTest() 
 	{
 		this.b2dShell = new B2dShell();
@@ -36,7 +47,6 @@ public class SliceTest extends Sprite
 		this.b2dShell.positionIterations = 90;
 		this.b2dShell.createWorld(0, 30, stage, true);
 		this.b2dShell.drawDebug(this);
-		//this.b2dShell.mouseEnabled = true;
 		
 		this.floorMc = this.getChildByName("floor_mc") as Sprite;
 		var polyData:PolyData = new PolyData();
@@ -60,24 +70,71 @@ public class SliceTest extends Sprite
 		bodyList.push(this.createRect());
 		bodyList.push(this.createRect());
 		
-		this.slice = new Slice(this.b2dShell, stage, this.canvasContainer);
-		this.slice.mouseDraw = true;
+		this.slice = new Slice(this.b2dShell, stage);
 		this.slice.initSliceBody(bodyList);
 		
 		this.slice.addEventListener(PlugsEvent.SLICE_COMPLETE, sliceCompleteHandler);
 		
 		this.chainEffect = new ChainEffect(this);
-		this.chainEffect.chainLength = 4;
+		this.chainEffect.chainLength = 2;
 		this.chainEffect.move(mouseX, mouseY);
 		
-		stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler);
-		
+		//this.initCanvas();
+		this.initMouseEvent();
 		this.addEventListener(Event.ENTER_FRAME, enterFrameHandler);
 	}
 	
-	private function keyDownHandler(event:KeyboardEvent):void 
+	/**
+	 * 初始化画布
+	 */
+	private function initCanvas():void
 	{
-		this.chainEffect.clear();
+		if (this.canvas || !this.canvasContainer)
+			return;
+		this.canvas = new Sprite();
+		this.canvasContainer.addChild(this.canvas);
+	}
+	
+	/**
+	 * 初始化鼠标事件
+	 */
+	private function initMouseEvent():void
+	{
+		this.stage.addEventListener(MouseEvent.MOUSE_DOWN, mouseDownHander);
+	}
+	
+	private function mouseMoveHander(event:MouseEvent):void
+	{
+		if (this.canvas)
+		{
+			this.canvas.graphics.clear();
+			this.canvas.graphics.lineStyle(1.5, 0xFFF0000);
+			this.canvas.graphics.moveTo(this.begX, this.begY);
+			this.canvas.graphics.lineTo(this.mouseX, this.mouseY);
+		}
+	}
+	
+	private function mouseDownHander(event:MouseEvent):void
+	{
+		this.stage.addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHander);
+		this.stage.addEventListener(MouseEvent.MOUSE_UP, mouseUpHander);
+		this.begX = this.mouseX; 
+		this.begY = this.mouseY;
+		if (this.chainEffect)
+			this.chainEffect.move(mouseX, mouseY);
+		this.mouseDown = true;
+	}
+	
+	private function mouseUpHander(event:MouseEvent):void 
+	{
+		this.mouseReleased = true;
+		this.mouseDown = false;
+		this.stage.removeEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHander);
+		this.stage.removeEventListener(MouseEvent.MOUSE_UP, mouseUpHander);
+		if (this.canvas)
+			this.canvas.graphics.clear();
+		if (this.chainEffect)
+			this.chainEffect.clear();
 	}
 	
 	private function sliceCompleteHandler(event:PlugsEvent):void 
@@ -125,9 +182,17 @@ public class SliceTest extends Sprite
 	
 	private function enterFrameHandler(event:Event):void 
 	{
-		this.chainEffect.render(mouseX, mouseY, .5);
-		if (this.slice)
-			this.slice.update();
+		if (this.mouseDown && this.chainEffect)
+			this.chainEffect.render(this.mouseX, this.mouseY, .5);
+		if (this.slice && this.mouseReleased)
+		{
+			/*this.endX = this.mouseX;
+			this.endY = this.mouseY;*/
+			this.endX = this.chainEffect.prevPos.x;
+			this.endY = this.chainEffect.prevPos.y;
+			this.slice.update(this.begX, this.begY, this.endX, this.endY);
+			this.mouseReleased = false;
+		}
 		this.b2dShell.render();
 	}
 	
