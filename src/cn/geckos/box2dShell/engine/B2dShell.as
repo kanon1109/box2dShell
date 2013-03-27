@@ -631,7 +631,7 @@ public class B2dShell
 	}
 	
 	/**
-	 * 更新刚体关键的状态 用于删除关节
+	 * 更新刚体关节的状态 用于删除关节
 	 */
 	private function updateDestroyJoint():void 
 	{

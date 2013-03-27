@@ -11,8 +11,10 @@ import cn.geckos.utils.Random;
 import flash.display.BitmapData;
 import flash.display.Sprite;
 import flash.events.Event;
+import flash.events.KeyboardEvent;
 import flash.events.MouseEvent;
 import flash.geom.Point;
+import flash.ui.Keyboard;
 import flash.utils.getDefinitionByName;
 /**
  * ...切割测试
@@ -83,6 +85,21 @@ public class SliceTest extends Sprite
 		this.initCanvas();
 		this.initMouseEvent();
 		this.addEventListener(Event.ENTER_FRAME, enterFrameHandler);
+		
+		stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler);
+	}
+	
+	private function keyDownHandler(event:KeyboardEvent):void 
+	{
+		if (event.keyCode == Keyboard.D)
+		{
+			this.b2dShell.clearAll();
+			this.slice.reset();
+			var bodyList:Array = [];
+			bodyList.push(this.createRect());
+			bodyList.push(this.createRect());
+			this.slice.initSliceBody(bodyList);
+		}
 	}
 	
 	/**

@@ -29,10 +29,13 @@ public class Slice extends EventDispatcher
 	//激光的进入点
 	private var enterPointsVec:Vector.<b2Vec2>;
 	private var numEnterPoints:int;
+	private var laserCont:Sprite = new Sprite();
 	public function Slice(b2dShell:B2dShell, stage:Stage)
 	{
 		this.b2dShell = b2dShell;
 		this.stage = stage;
+		this.laserCont = new Sprite();
+		this.stage.addChild(this.laserCont);
 	}
 	
 	/**
@@ -51,6 +54,8 @@ public class Slice extends EventDispatcher
 		{
 			var p1:b2Vec2 = new b2Vec2(begX / B2dShell.CONVERSION, begY / B2dShell.CONVERSION);
 			var p2:b2Vec2 = new b2Vec2(endX / B2dShell.CONVERSION, endY / B2dShell.CONVERSION);
+			trace("beg", begX, begY);
+			trace("end", endX, endY);
 			//2d世界判断激光碰撞
 			this.b2dShell.world.RayCast(this.laserFired, p1, p2);
 			this.b2dShell.world.RayCast(this.laserFired, p2, p1);
@@ -77,9 +82,54 @@ public class Slice extends EventDispatcher
 		{
 			//如果之前激光没有碰到过 那么将切点坐标放进列表中
 			this.enterPointsVec[userData.params.sliceId] = point;
+			trace("userData.params.sliceId", userData.params.sliceId);
+			trace("point", point.x * 30, point.y * 30);
+			
+			/*for each (var vec:b2Vec2 in this.enterPointsVec) 
+			{
+				trace("vec", vec.x, vec.y)
+			}*/
+			
+			//报错版
+			/*userData.params.sliceId 1
+			point 132.870584922431 238.97837724997405
+			userData.params.sliceId 0
+			point 91.3571553731911 389.45580864304515
+			userData.params.sliceId 2
+			point 174.25984669537183 88.95102787234109
+			userData.params.sliceId 3
+			point 132.74641714234966 239.4284592791222
+			
+			beg 69 392
+			end 123.7159423828125 -97.0523681640625
+			
+			userData.params.sliceId 1
+			point 86.1168456763053 239.00923443977018
+			userData.params.sliceId 0
+			point 69.28301812092305 389.4703774394966
+			
+			userData.params.sliceId 2
+			point 96.35797119140624 147.47381591796875
+			userData.params.sliceId 3
+			point 86.06649524493331 239.45926776878207
+			
+			*/
+			
+			//正常版
+			/*userData.params.sliceId 1
+			point 99.00762717947367 239.000729525652
+			userData.params.sliceId 0
+			point 84.80606115515732 389.4601332978862*/
+			this.laserCont.graphics.clear();
 		}
 		else
 		{
+			this.laserCont.graphics.lineStyle(4, 0x0000FF);
+			this.laserCont.graphics.drawCircle(enterPointsVec[userData.params.sliceId].x * 30, enterPointsVec[userData.params.sliceId].y * 30, 7);
+		
+			this.laserCont.graphics.lineStyle(4, 0xFF0000);
+			this.laserCont.graphics.drawCircle(point.x * 30, point.y * 30, 7);
+			
 			var b2v:b2Vec2 = this.enterPointsVec[userData.params.sliceId];
 			this.splitBody(affectedBody, b2v, point.Copy());
 		}
@@ -191,6 +241,7 @@ public class Slice extends EventDispatcher
 		bodyDataList.push( { "bodyData":bodyData, "texture":texture, "shapeVertices":poly2Vertices } );
 		this.enterPointsVec.push(null);
 		this.numEnterPoints++;
+		trace("this.numEnterPoints", this.numEnterPoints);
 		
 		//发送事件出去，外部根据事件穿的多边形对象选择是否创建一个新刚体。
 		var event:PlugsEvent = new PlugsEvent(PlugsEvent.SLICE_COMPLETE);
@@ -312,6 +363,11 @@ public class Slice extends EventDispatcher
 			this.numEnterPoints++;
 		}
 		this.enterPointsVec = new Vector.<b2Vec2>(this.numEnterPoints);
+	}
+	
+	public function reset():void
+	{
+		this.numEnterPoints = 0;
 	}
 	
 	/**
