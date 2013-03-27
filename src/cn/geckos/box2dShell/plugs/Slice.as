@@ -8,6 +8,7 @@ import cn.geckos.box2dShell.data.PolyData;
 import cn.geckos.box2dShell.engine.B2dShell;
 import cn.geckos.box2dShell.plugs.event.PlugsEvent;
 import flash.display.BitmapData;
+import flash.display.Sprite;
 import flash.display.Stage;
 import flash.events.EventDispatcher;
 import flash.geom.Point;
@@ -131,6 +132,11 @@ public class Slice extends EventDispatcher
 		shape1Vertices = this.arrangeClockwise(shape1Vertices);
 		shape2Vertices = this.arrangeClockwise(shape2Vertices);
 		
+		//验证矩形顶点是否合法
+		if (this.b2dShell.validatePolygonByVec2Vector(shape1Vertices) != 0 || 
+			this.b2dShell.validatePolygonByVec2Vector(shape2Vertices) != 0)
+			return;
+		
 		//获取切割id
 		var origUserDataId:int = sliceBody.GetUserData().params.sliceId;
 		
@@ -160,7 +166,6 @@ public class Slice extends EventDispatcher
 		bodyData.postion = new Point(sliceBody.GetPosition().x * B2dShell.CONVERSION, 
 									 sliceBody.GetPosition().y * B2dShell.CONVERSION);
 		bodyData.bodyType = b2Body.b2_dynamicBody;
-		
 		//将要创建的2个新刚体的数据保存至数组中
 		var bodyDataList:Array = [];
 		var userData:Object = this.b2dShell.getUserDataByBody(sliceBody);
@@ -184,7 +189,6 @@ public class Slice extends EventDispatcher
 									 sliceBody.GetPosition().y * B2dShell.CONVERSION);
 		bodyData.bodyType = b2Body.b2_dynamicBody;
 		bodyDataList.push( { "bodyData":bodyData, "texture":texture, "shapeVertices":poly2Vertices } );
-		
 		this.enterPointsVec.push(null);
 		this.numEnterPoints++;
 		
