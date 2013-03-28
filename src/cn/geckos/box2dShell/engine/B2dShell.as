@@ -391,8 +391,8 @@ public class B2dShell
 	
 	/**
 	 * 验证多边形顶点是否合法
-	 * @param	pathList  路径列表 二维数组[[x,y],[x,y]]
-	 * @return	Object    返回状态 success 0为失败 1为成功，高宽、最左最右坐标、最上最下坐标。
+	 * @param	pathList  	  路径列表 二维数组[[x,y],[x,y]]
+	 * @return	Object        返回状态 success 0为失败 1为成功，高宽、最左最右坐标、最上最下坐标。
 	 */
 	public function validatePolygon(pathList:Array):Object
 	{
@@ -408,9 +408,7 @@ public class B2dShell
 									   posY / B2dShell.CONVERSION);
 			b2Vec2Vector.push(b2);
 		}
-		if (!this.separator)
-			this.separator = new b2Separator();
-		var status:int = this.separator.Validate(b2Vec2Vector);
+		var status:int = this.validatePolygonByVec2Vector(b2Vec2Vector);
 		var o:Object;
 		if (status == 2)
 		{
@@ -425,12 +423,26 @@ public class B2dShell
 		}
 		//成功
 		o = { "success":1, 
+			  "status":1, 
 			  "width":sizeObj.width, 
 			  "height":sizeObj.height, 
 			  "minX":sizeObj.minX, "maxX":sizeObj.maxX,
 			  "minY":sizeObj.minY, "maxY":sizeObj.maxY };
 		return o;
 	}
+	
+	/**
+	 * 根据 box2d的顶点列表 验证顶点是否合法
+	 * @param	b2Vec2Vector  Vector类型列表存放b2Vec2
+	 * @return  返回状态 status 1为有交叉， 0为成功， 2为逆时针。
+	 */
+	public function validatePolygonByVec2Vector(b2Vec2Vector:Vector.<b2Vec2>):int
+	{
+		if (!this.separator)
+			this.separator = new b2Separator();
+		return this.separator.Validate(b2Vec2Vector);
+	}
+	
 	
 	/**
 	 * 根据坐标计算这个坐标形成的图形的尺寸高宽
