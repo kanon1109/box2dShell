@@ -152,7 +152,7 @@ public class B2dShell
 		this.bodyDef.userData = { };
 		//刚体参数
 		this.bodyDef.userData.params = bodyData.params;
-		//材质
+		//贴图的纹理
 		this.bodyDef.userData.texture = bodyData.texture;
 		//是否环绕屏幕
 		this.bodyDef.userData.isWrapAround = bodyData.isWrapAround;
@@ -242,7 +242,7 @@ public class B2dShell
 		this.bodyDef.userData = { };
 		//刚体参数
 		this.bodyDef.userData.params = bodyData.params;
-		//材质
+		//贴图的纹理
 		this.bodyDef.userData.texture = bodyData.texture;
 		//是否环绕屏幕
 		this.bodyDef.userData.isWrapAround = bodyData.isWrapAround;

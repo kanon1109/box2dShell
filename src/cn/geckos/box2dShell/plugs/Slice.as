@@ -85,11 +85,6 @@ public class Slice extends EventDispatcher
 			trace("userData.params.sliceId", userData.params.sliceId);
 			trace("point", point.x * 30, point.y * 30);
 			
-			/*for each (var vec:b2Vec2 in this.enterPointsVec) 
-			{
-				trace("vec", vec.x, vec.y)
-			}*/
-			
 			//报错版
 			/*userData.params.sliceId 1
 			point 132.870584922431 238.97837724997405
@@ -102,7 +97,6 @@ public class Slice extends EventDispatcher
 			
 			beg 69 392
 			end 123.7159423828125 -97.0523681640625
-			
 			userData.params.sliceId 1
 			point 86.1168456763053 239.00923443977018
 			userData.params.sliceId 0
@@ -113,13 +107,56 @@ public class Slice extends EventDispatcher
 			userData.params.sliceId 3
 			point 86.06649524493331 239.45926776878207
 			
+			beg 117 398
+			end 102.140625 88.0078125
+			userData.params.sliceId 1
+			point 109.37809430358378 238.99390319237662
+			userData.params.sliceId 0
+			point 116.5896387524651 389.4391567082348
+			splitBody this.numEnterPoints 3
+			userData.params.sliceId 2
+			point 102.1881189728239 88.99861867648755
+			splitBody this.numEnterPoints 4
+			userData.params.sliceId 0
+			point 109.39966335412669 239.44387078254104
+			userData.params.sliceId 3
+			point 112.245 298.80250000000007
+			splitBody this.numEnterPoints 5
+			
 			*/
 			
 			//正常版
 			/*userData.params.sliceId 1
 			point 99.00762717947367 239.000729525652
 			userData.params.sliceId 0
-			point 84.80606115515732 389.4601332978862*/
+			point 84.80606115515732 389.4601332978862
+			
+			userData.params.sliceId 1
+			point 81.10264902567334 239.01254378158765
+			userData.params.sliceId 0
+			point 82.9563986876749 389.46135308460373
+			-----------------splitBody this.numEnterPoints 3
+			-----------------splitBody this.numEnterPoints 4
+			userData.params.sliceId 0
+			point 81.10819364081392 239.4625402201798
+			userData.params.sliceId 1
+			point 79.25444397881236 89.01373091716377
+			
+			
+			beg 123 396
+			end 143.625 32.0625
+			userData.params.sliceId 1
+			point 131.89866437394215 238.97902227434756
+			userData.params.sliceId 0
+			point 123.37206866983897 389.4346791985691
+			this.numEnterPoints 3
+			this.numEnterPoints 4
+			userData.params.sliceId 1
+			point 140.39975705144028 88.97337784685813
+			userData.params.sliceId 3
+			point 131.87316131542383 239.4290353342032
+			
+			*/
 			this.laserCont.graphics.clear();
 		}
 		else
@@ -238,7 +275,7 @@ public class Slice extends EventDispatcher
 		
 		this.enterPointsVec.push(null);
 		this.numEnterPoints++;
-		trace("this.numEnterPoints", this.numEnterPoints);
+		trace("-----------------splitBody this.numEnterPoints", this.numEnterPoints);
 		
 		//发送事件出去，外部根据事件穿的多边形对象选择是否创建一个新刚体。
 		var event:PlugsEvent = new PlugsEvent(PlugsEvent.SLICE_COMPLETE);
@@ -359,6 +396,7 @@ public class Slice extends EventDispatcher
 			userData.params = { "sliceId":this.numEnterPoints };
 			this.numEnterPoints++;
 		}
+		trace("this.numEnterPoints", this.numEnterPoints);
 		this.enterPointsVec = new Vector.<b2Vec2>(this.numEnterPoints);
 	}
 	

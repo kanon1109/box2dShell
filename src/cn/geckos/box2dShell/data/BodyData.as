@@ -164,7 +164,7 @@ public class BodyData
 	}
 	
 	/**
-	 * 纹理
+	 * 贴图的纹理
 	 */
 	public function get texture():BitmapData{ return _texture; }
 	public function set texture(value:BitmapData):void 
