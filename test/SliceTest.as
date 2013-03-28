@@ -78,11 +78,11 @@ public class SliceTest extends Sprite
 		
 		this.slice.addEventListener(PlugsEvent.SLICE_COMPLETE, sliceCompleteHandler);
 		
-		this.chainEffect = new ChainEffect(this);
-		this.chainEffect.chainLength = 2;
-		this.chainEffect.move(mouseX, mouseY);
+		//this.chainEffect = new ChainEffect(this);
+		//this.chainEffect.chainLength = 2;
+		//this.chainEffect.move(mouseX, mouseY);
 		
-		//this.initCanvas();
+		this.initCanvas();
 		this.initMouseEvent();
 		this.addEventListener(Event.ENTER_FRAME, enterFrameHandler);
 		
@@ -138,8 +138,8 @@ public class SliceTest extends Sprite
 		this.stage.addEventListener(MouseEvent.MOUSE_UP, mouseUpHander);
 		this.begX = this.mouseX; 
 		this.begY = this.mouseY;
-		if (this.chainEffect)
-			this.chainEffect.move(mouseX, mouseY);
+		/*if (this.chainEffect)
+			this.chainEffect.move(mouseX, mouseY);*/
 		this.mouseDown = true;
 	}
 	
@@ -151,8 +151,8 @@ public class SliceTest extends Sprite
 		this.stage.removeEventListener(MouseEvent.MOUSE_UP, mouseUpHander);
 		if (this.canvas)
 			this.canvas.graphics.clear();
-		if (this.chainEffect)
-			this.chainEffect.clear();
+		//if (this.chainEffect)
+			//this.chainEffect.clear();
 	}
 	
 	private function sliceCompleteHandler(event:PlugsEvent):void 
@@ -191,6 +191,7 @@ public class SliceTest extends Sprite
 		polyData.height = 150;
 		polyData.postion = new Point(100, 100);
 		polyData.bodyType = b2Body.b2_dynamicBody;
+		polyData.bullet = true;
 		var MyClass:Class = getDefinitionByName("T" + Random.randint(1, 4)) as Class;
 		polyData.texture = new MyClass() as BitmapData;
 		polyData.displayObject = Texture.createTextureByBoxSize(polyData.width, polyData.height, polyData.texture, 1, 0x000000)
@@ -200,14 +201,14 @@ public class SliceTest extends Sprite
 	
 	private function enterFrameHandler(event:Event):void 
 	{
-		if (this.mouseDown && this.chainEffect)
-			this.chainEffect.render(this.mouseX, this.mouseY, .5);
+		//if (this.mouseDown && this.chainEffect)
+			//this.chainEffect.render(this.mouseX, this.mouseY, .5);
 		if (this.slice && this.mouseReleased)
 		{
-			/*this.endX = this.mouseX;
-			this.endY = this.mouseY;*/
-			this.endX = this.chainEffect.prevPos.x;
-			this.endY = this.chainEffect.prevPos.y;
+			//this.endX = this.chainEffect.prevPos.x;
+			//this.endY = this.chainEffect.prevPos.y;
+			this.endX = this.mouseX;
+			this.endY = this.mouseY;
 			this.slice.update(this.begX, this.begY, this.endX, this.endY);
 			this.mouseReleased = false;
 		}
