@@ -1,8 +1,6 @@
 package cn.geckos.box2dShell.plugs 
 {
-import Box2D.Common.Math.b2Vec2;
 import Box2D.Dynamics.b2Body;
-import Box2D.Dynamics.Joints.b2WeldJointDef;
 import cn.geckos.box2dShell.data.PolyData;
 import cn.geckos.box2dShell.engine.B2dShell;
 import cn.geckos.geom.Vector2D;
@@ -102,17 +100,24 @@ public class DrawPolygon
 	private function createPathLine(pathList:Array):void
 	{
 		var length:int = pathList.length - 1;
+		var sx:int;
+		var sy:int;
+		var ex:int;
+		var ey:int;
+		var v2d:Vector2D;
+		var dist:Number;
+		var angle:Number;
 		for (var i:int = 0; i < length; i += 1) 
 		{
 			//参考www.emanueleferonato.com/2013/01/10/way-of-an-idea-prototype-updated-to-box2d-2-1a-and-nape/
 			//先线段的 0，1，2，3分成一个规律的组合，0，1分别为上一次鼠标坐标，2，3为当前鼠标坐标。
-			var sx:int = pathList[i][0];
-			var sy:int = pathList[i][1];
-			var ex:int = pathList[i + 1][0]
-			var ey:int = pathList[i + 1][1];
-			var v2d:Vector2D = new Vector2D(sx, sy);
-			var dist:Number = v2d.dist(new Vector2D(ex, ey));
-			var angle:Number = v2d.angleBetween(new Vector2D(ex, ey), false);
+			sx = pathList[i][0];
+			sy = pathList[i][1];
+			ex = pathList[i + 1][0]
+			ey = pathList[i + 1][1];
+			v2d = new Vector2D(sx, sy);
+			dist = v2d.dist(new Vector2D(ex, ey));
+			angle = v2d.angleBetween(new Vector2D(ex, ey), false);
 			this.createLinePolygonBody((sx + ex) * .5, (sy + ey) * .5, dist, 4, angle);
 		}
 	}

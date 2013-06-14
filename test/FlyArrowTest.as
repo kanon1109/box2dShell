@@ -1,4 +1,4 @@
-package  
+﻿package  
 {
 import Box2D.Dynamics.b2Body;
 import cn.geckos.box2dShell.data.CircleData;
@@ -42,7 +42,6 @@ public class FlyArrowTest extends Sprite
 		
 		this.floorMc = this.getChildByName("floor_mc") as Sprite;
 		var polyData:PolyData = new PolyData();
-		polyData.container = this;
 		polyData.friction = 1;
 		polyData.density = 1;
 		polyData.restitution = .1;
@@ -123,7 +122,6 @@ public class FlyArrowTest extends Sprite
 	{
 		var circleData:CircleData = new CircleData();
 		circleData.radius = 20;
-		circleData.container = this;
 		circleData.friction = 1;
 		circleData.density = 1;
 		circleData.restitution = .1;
@@ -146,7 +144,6 @@ public class FlyArrowTest extends Sprite
 		this.boxMc.x = Math.random() * stage.stageWidth;
 		this.boxMc.y = Math.random() * stage.stageHeight;
 		var polyData:PolyData = new PolyData();
-		polyData.container = this;
 		polyData.friction = 1;
 		polyData.density = 1;
 		polyData.restitution = .1;

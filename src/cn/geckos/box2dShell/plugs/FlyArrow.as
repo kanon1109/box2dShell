@@ -125,7 +125,8 @@ public class FlyArrow
 		var weldJointDef:b2WeldJointDef;
 		if (this.contactDict)
 		{
-			for each (var label:String in this.contactDict) 
+			var label:String
+			for each (label in this.contactDict) 
 			{
 				if (userDataA.bodyLabel == label && 
 					userDataB.bodyLabel == ARROW_LABEL)
@@ -234,11 +235,13 @@ public class FlyArrow
 	{
 		if (!this.arrowDict) return;
 		var index:int = 0;
-		for each (var body:b2Body in this.arrowDict) 
+		var body:b2Body;
+		var o:Object;
+		for each (body in this.arrowDict) 
 		{
 			if (body)
 			{
-				var o:Object = body.GetUserData();
+				o = body.GetUserData();
 				if (o && o.params && !o.params.freeFlight)
 				{
 					if (body.GetType() == b2Body.b2_dynamicBody) 

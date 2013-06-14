@@ -1,4 +1,4 @@
-package  
+﻿package  
 {
 import Box2D.Dynamics.b2Body;
 import cn.geckos.box2dShell.data.CircleData;
@@ -63,7 +63,6 @@ public class LineFloorTest extends Sprite
 	{
 		var circleData:CircleData = new CircleData();
 		circleData.radius = 20;
-		circleData.container = this;
 		circleData.friction = 1;
 		circleData.density = 1;
 		circleData.restitution = .1;
