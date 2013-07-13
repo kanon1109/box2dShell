@@ -127,7 +127,8 @@ public class FlyArrow
 		var weldJointDef:b2WeldJointDef;
 		if (this.contactDict)
 		{
-			for each (var label:String in this.contactDict) 
+			var label:String
+			for each (label in this.contactDict) 
 			{
 				if (userDataA.bodyLabel == label && 
 					userDataB.bodyLabel == ARROW_LABEL)
