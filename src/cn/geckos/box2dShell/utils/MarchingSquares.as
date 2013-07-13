@@ -1,4 +1,4 @@
-package cn.geckos.box2dShell.plugs 
+package cn.geckos.box2dShell.utils 
 {
 import flash.display.BitmapData;
 import flash.geom.Point;

@@ -4,9 +4,9 @@ import Box2D.Dynamics.b2Body;
 import Box2D.Dynamics.b2PreSolveEvent;
 import Box2D.Dynamics.b2World;
 import Box2D.Dynamics.Joints.b2WeldJointDef;
-import cn.geckos.box2dShell.data.PolyData;
-import cn.geckos.box2dShell.engine.B2dShell;
-import cn.geckos.utils.MathUtil;
+import cn.geckos.box2dShell.core.B2dShell;
+import cn.geckos.box2dShell.model.PolyData;
+import cn.geckos.box2dShell.utils.B2dUtil;
 import flash.display.DisplayObject;
 import flash.events.EventDispatcher;
 import flash.geom.Point;
@@ -23,6 +23,8 @@ public class FlyArrow
 	private var _b2dShell:B2dShell;
 	private var arrowDict:Dictionary;
 	private var contactDict:Dictionary;
+	//默认形状顶点
+	private const arrowVertices:Array = [[ -54, 0], [ -23, -3], [ -5, 0], [ -23, 3]];
 	public function FlyArrow(b2dShell:B2dShell) 
 	{
 		this.arrowDict = new Dictionary();
@@ -42,10 +44,9 @@ public class FlyArrow
 	{
 		if (!this.b2dShell || !this.arrowDict) return null;
 		var polyData:PolyData = new PolyData();
-		if (!vertices)
-			polyData.vertices = [[ -54, 0], [ -23, -3], [ -5, 0], [ -23, 3]];
-		else
-			polyData.vertices = vertices;
+		//默认形状顶点
+		if (!vertices) polyData.vertices = this.arrowVertices;
+		else polyData.vertices = vertices;
 		polyData.density = 1;
 		polyData.friction = .5;
 		polyData.restitution = .5;
@@ -57,11 +58,13 @@ public class FlyArrow
 		polyData.displayObject = source;
 		polyData.params = { "freeFlight":false };
 		var body:b2Body = this.b2dShell.createPoly(polyData);
-		var angle:Number = MathUtil.dgs2rds(rotation);
+		var angle:Number = B2dUtil.dgs2rds(rotation);
+		//初始向量
 		var vx:Number = Math.cos(angle) * speed;
 		var vy:Number = Math.sin(angle) * speed;
 		var dispatcher:EventDispatcher = new EventDispatcher();
 		body.SetEventDispatcher(dispatcher);
+		//监听碰撞消息 
 		body.GetEventDispatcher().addEventListener(b2World.PRESOLVE, preSolveListener);
 		this.b2dShell.setLinearVelocity(body, vx, vy);
 		this.arrowDict[body] = body;
@@ -103,7 +106,6 @@ public class FlyArrow
 			userData.params.freeFlight = true;
 			body.SetBullet(false);
 			this.removeBodyDispatcher(body, preSolveListener);
-			this.arrowDict[body] = null;
 			delete this.arrowDict[body];
 		}
 	}
@@ -202,7 +204,6 @@ public class FlyArrow
 				body.SetBullet(false);
 				this.removeBodyDispatcher(body, preSolveListener);
 				this.b2dShell.destroyBody(body);
-				this.arrowDict[body] = null;
 				delete this.arrowDict[body];
 			}
 		}
@@ -234,11 +235,13 @@ public class FlyArrow
 	{
 		if (!this.arrowDict) return;
 		var index:int = 0;
-		for each (var body:b2Body in this.arrowDict) 
+		var body:b2Body;
+		var o:Object;
+		for each (body in this.arrowDict) 
 		{
 			if (body)
 			{
-				var o:Object = body.GetUserData();
+				o = body.GetUserData();
 				if (o && o.params && !o.params.freeFlight)
 				{
 					if (body.GetType() == b2Body.b2_dynamicBody) 
@@ -251,7 +254,6 @@ public class FlyArrow
 					{
 						body.SetBullet(false);
 						this.removeBodyDispatcher(body, preSolveListener);
-						this.arrowDict[body] = null;
 						delete this.arrowDict[body];
 					}
 				}
@@ -280,10 +282,7 @@ public class FlyArrow
 	{
 		if (!this.contactDict) return;
 		if (this.contactDict[str])
-		{
-			this.contactDict[str] = null;
 			delete this.contactDict[str];
-		}
 	}
 	
 	/**

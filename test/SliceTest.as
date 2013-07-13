@@ -1,13 +1,11 @@
 package  
 {
 import Box2D.Dynamics.b2Body;
-import cn.geckos.box2dShell.data.PolyData;
-import cn.geckos.box2dShell.engine.B2dShell;
+import cn.geckos.box2dShell.model.PolyData;
+import cn.geckos.box2dShell.core.B2dShell;
 import cn.geckos.box2dShell.plugs.event.PlugsEvent;
 import cn.geckos.box2dShell.plugs.Slice;
 import cn.geckos.box2dShell.plugs.Texture;
-import cn.geckos.ChainEffect;
-import cn.geckos.utils.Random;
 import flash.display.BitmapData;
 import flash.display.Sprite;
 import flash.events.Event;
@@ -31,7 +29,7 @@ public class SliceTest extends Sprite
 	private var canvasContainer:Sprite;
 	//切割线条的画布
 	private var canvas:Sprite;
-	private var chainEffect:ChainEffect;
+	//private var chainEffect:ChainEffect;
 	//鼠标是否放开了
 	private var mouseReleased:Boolean;
 	//鼠标是否点击
@@ -191,7 +189,7 @@ public class SliceTest extends Sprite
 		polyData.height = 150;
 		polyData.postion = new Point(100, 100);
 		polyData.bodyType = b2Body.b2_dynamicBody;
-		var MyClass:Class = getDefinitionByName("T" + Random.randint(1, 4)) as Class;
+		var MyClass:Class = getDefinitionByName("T" + int(Math.random() * 4 + 1)) as Class;
 		polyData.texture = new MyClass() as BitmapData;
 		polyData.displayObject = Texture.createTextureByBoxSize(polyData.width, polyData.height, polyData.texture, 1, 0x000000)
 		this.textureContainer.addChild(polyData.displayObject);

@@ -1,8 +1,8 @@
 package  
 {
 import Box2D.Dynamics.b2Body;
-import cn.geckos.box2dShell.data.CircleData;
-import cn.geckos.box2dShell.engine.B2dShell;
+import cn.geckos.box2dShell.model.CircleData;
+import cn.geckos.box2dShell.core.B2dShell;
 import cn.geckos.box2dShell.plugs.event.PlugsEvent;
 import cn.geckos.box2dShell.plugs.LineFloor;
 import flash.display.Sprite;
@@ -45,7 +45,6 @@ public class LineFloorTest extends Sprite
 					//销毁有显示对象装饰的刚体 box2d的debug显示对象除外
 					this.b2dShell.destroyBody(this.b2dShell.getBodyByPostion(mouseX, mouseY));
 					this.lineFloor.destroy();
-					this.lineFloor = null;
 				break;
 		}
 	}
@@ -63,7 +62,6 @@ public class LineFloorTest extends Sprite
 	{
 		var circleData:CircleData = new CircleData();
 		circleData.radius = 20;
-		circleData.container = this;
 		circleData.friction = 1;
 		circleData.density = 1;
 		circleData.restitution = .1;

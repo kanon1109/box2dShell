@@ -1,16 +1,15 @@
 package  
 {
-import Box2D.Common.Math.b2Vec2;
 import Box2D.Dynamics.b2Body;
-import cn.geckos.box2dShell.data.PolyData;
-import cn.geckos.box2dShell.engine.B2dShell;
-import cn.geckos.box2dShell.plugs.MarchingSquares;
-import cn.geckos.utils.RDP;
+import cn.geckos.box2dShell.core.B2dShell;
+import cn.geckos.box2dShell.model.PolyData;
+import cn.geckos.box2dShell.utils.B2dUtil;
+import cn.geckos.box2dShell.utils.MarchingSquares;
+import cn.geckos.box2dShell.utils.RDP;
 import flash.display.Bitmap;
 import flash.display.BitmapData;
 import flash.display.Sprite;
 import flash.events.Event;
-import flash.geom.Matrix;
 import flash.geom.Point;
 /**
  * ...算法自动提取多边形的边缘测试
@@ -80,7 +79,7 @@ public class MarchingSquaresTest extends Sprite
 				vertices.push([marchingVector[i].x, marchingVector[i].y]);
 		}
 		
-		var o:Object = this.b2dShell.mathSizeByPath(vertices);
+		var o:Object = B2dUtil.mathSizeByPath(vertices);
 		//trace("vertices", vertices);
 		polyData = new PolyData();
 		polyData.boxPoint = new Point(o.width / 2, o.height / 2);

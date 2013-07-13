@@ -1,8 +1,8 @@
 package  
 {
 import Box2D.Dynamics.b2Body;
-import cn.geckos.box2dShell.data.PolyData;
-import cn.geckos.box2dShell.engine.B2dShell;
+import cn.geckos.box2dShell.model.PolyData;
+import cn.geckos.box2dShell.core.B2dShell;
 import cn.geckos.box2dShell.plugs.DrawPolygon;
 import flash.display.Sprite;
 import flash.events.Event;
@@ -29,7 +29,6 @@ public class DrawPolygonTest extends Sprite
 		
 		var floorMc:Sprite = this.getChildByName("floor_mc") as Sprite;
 		var polyData:PolyData = new PolyData();
-		polyData.container = this;
 		polyData.friction = 1;
 		polyData.density = 1;
 		polyData.restitution = .9;

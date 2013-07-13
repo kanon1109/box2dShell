@@ -3,12 +3,11 @@ package
 import Box2D.Common.Math.b2Vec2;
 import Box2D.Dynamics.b2Body;
 import Box2D.Dynamics.Joints.b2WeldJointDef;
-import cn.geckos.box2dShell.data.CircleData;
-import cn.geckos.box2dShell.data.PolyData;
-import cn.geckos.box2dShell.engine.B2dShell;
-import cn.geckos.box2dShell.engine.Box2dParser;
-import cn.geckos.utils.DisplayObjectUtil;
-import cn.geckos.utils.Random;
+import cn.geckos.box2dShell.model.CircleData;
+import cn.geckos.box2dShell.model.PolyData;
+import cn.geckos.box2dShell.core.B2dParser;
+import cn.geckos.box2dShell.core.B2dShell;
+import cn.geckos.box2dShell.utils.B2dUtil;
 import flash.display.BitmapData;
 import flash.display.DisplayObject;
 import flash.display.GraphicsPathCommand;
@@ -20,7 +19,7 @@ import flash.geom.Point;
 import flash.ui.Keyboard;
 import flash.utils.getDefinitionByName;
 /**
- * ...测试B2dShell 和 Box2dParser
+ * ...测试B2dShell 和 B2dParser
  * @author Kanon
  */
 public class Test extends Sprite 
@@ -72,22 +71,22 @@ public class Test extends Sprite
 	private function mouseClickHandler(event:MouseEvent):void 
 	{
 		//一个对变形刚体的数据
-		/*var str:String = '{"bodyData":{"data0":{"shape":{"bodyType":2,"type":"poly","rotation":0,"friction":0,"vertices":[[-57.5,-79.5],[-3.5,-74.5],[57.5,-67.5],[89.5,-22.5],[89.5,28.5],[90.5,78.5],[37.5,79.5],[-12.5,79.5],[-62.5,73.5],[-90.5,30.5],[-90.5,-19.5],[-36.5,-6.5],[16.5,-1.5],[27.5,-50.5],[-22.5,-60.5]],"density":0.1,"name":"instance171","bodyLabel":"instance171","restitution":0,"width":181,"postion":{"x":100,"y":100},"height":159}}}}';
-		var arr:Array = Box2dParser.decode(str, this.b2dShell);
+		var str:String = '{"bodyData":{"data0":{"shape":{"bodyType":2,"type":"poly","rotation":0,"friction":0,"vertices":[[-57.5,-79.5],[-3.5,-74.5],[57.5,-67.5],[89.5,-22.5],[89.5,28.5],[90.5,78.5],[37.5,79.5],[-12.5,79.5],[-62.5,73.5],[-90.5,30.5],[-90.5,-19.5],[-36.5,-6.5],[16.5,-1.5],[27.5,-50.5],[-22.5,-60.5]],"density":0.1,"name":"instance171","bodyLabel":"instance171","restitution":0,"width":181,"postion":{"x":100,"y":100},"height":159}}}}';
+		var arr:Array = B2dParser.decode(str, this.b2dShell);
 		//trace(arr.length)
 		var length:int = arr.length;
 		for (var i:int = 0; i < length; i += 1)
 		{
 			var o:b2Body = arr[i];
 			//trace("bodyLabel", o.GetUserData().bodyLabel)
-		}*/
+		}
 		//this.createRect(mouseX, mouseY);
 		//this.createPolyByBitmap();
 		var body:b2Body = this.b2dShell.getBodyByPostion(mouseX / B2dShell.CONVERSION, mouseY / B2dShell.CONVERSION);
 		trace("body", body);
 		this.b2dShell.resizeBody(body, .9);
-		//去掉注释你将看到Box2dParser解析的this.b2dShell数据
-		//trace(Box2dParser.encode(this.b2dShell));
+		//去掉注释你将看到B2dParser解析的this.b2dShell数据
+		//trace(B2dParser.encode(this.b2dShell));
 	}
 	
 	private function keyDownHandler(event:KeyboardEvent):void 
@@ -97,7 +96,6 @@ public class Test extends Sprite
 			case Keyboard.SPACE:
 					//var bodyA:b2Body = this.createPoly();
 					this.body = this.createCircle();
-					//bodyB.SetAngle(MathUtil.dgs2rds(45));
 					//this.createJoint(bodyA, bodyB);
 				break;
 			case Keyboard.D:
@@ -222,8 +220,8 @@ public class Test extends Sprite
 		data.push(polyData.vertices[0][1]);
 		commands.push(GraphicsPathCommand.LINE_TO);
 		
-		var o:Object = this.b2dShell.mathSizeByPath(polyData.vertices);
-		var MyClass:Class = getDefinitionByName("T" + Random.randint(1, 5)) as Class;
+		var o:Object = B2dUtil.mathSizeByPath(polyData.vertices);
+		var MyClass:Class = getDefinitionByName("T" + int(Math.random() * 5 + 1)) as Class;
 		var bitmap:BitmapData = new MyClass() as BitmapData;
 		polyData.displayObject = this.createBitmapFill(bitmap, commands, data);
 		this.addChild(polyData.displayObject)

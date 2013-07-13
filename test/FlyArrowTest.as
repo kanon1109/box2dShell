@@ -1,11 +1,11 @@
-package  
+﻿package  
 {
 import Box2D.Dynamics.b2Body;
-import cn.geckos.box2dShell.data.CircleData;
-import cn.geckos.box2dShell.data.PolyData;
-import cn.geckos.box2dShell.engine.B2dShell;
+import cn.geckos.box2dShell.core.B2dShell;
+import cn.geckos.box2dShell.model.CircleData;
+import cn.geckos.box2dShell.model.PolyData;
 import cn.geckos.box2dShell.plugs.FlyArrow;
-import cn.geckos.geom.Vector2D;
+import cn.geckos.box2dShell.utils.B2dUtil;
 import flash.display.Sprite;
 import flash.events.Event;
 import flash.events.KeyboardEvent;
@@ -42,7 +42,6 @@ public class FlyArrowTest extends Sprite
 		
 		this.floorMc = this.getChildByName("floor_mc") as Sprite;
 		var polyData:PolyData = new PolyData();
-		polyData.container = this;
 		polyData.friction = 1;
 		polyData.density = 1;
 		polyData.restitution = .1;
@@ -93,8 +92,9 @@ public class FlyArrowTest extends Sprite
 	{
 		var sx:Number = 0;
 		var sy:Number = 0;
-		var v2d:Vector2D = new Vector2D(mouseX, mouseY)
-		var rotation:Number = v2d.angleBetween(new Vector2D(sx, sy));
+		var p1:Point = new Point(mouseX, mouseY);
+		var p2:Point = new Point(sx, sy);
+		var rotation:Number = B2dUtil.angleBetween(p1, p2);
 		//this.arrow = new Arrow();
 		//this.addChild(this.arrow);
 		this.b2dShell.addBuoyancyBody(this.flyArrow.create(sx, sy, rotation, 30, this.arrow));
@@ -123,7 +123,6 @@ public class FlyArrowTest extends Sprite
 	{
 		var circleData:CircleData = new CircleData();
 		circleData.radius = 20;
-		circleData.container = this;
 		circleData.friction = 1;
 		circleData.density = 1;
 		circleData.restitution = .1;
@@ -146,7 +145,6 @@ public class FlyArrowTest extends Sprite
 		this.boxMc.x = Math.random() * stage.stageWidth;
 		this.boxMc.y = Math.random() * stage.stageHeight;
 		var polyData:PolyData = new PolyData();
-		polyData.container = this;
 		polyData.friction = 1;
 		polyData.density = 1;
 		polyData.restitution = .1;

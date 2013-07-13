@@ -1,11 +1,11 @@
 package cn.geckos.box2dShell.plugs 
 {
 import Box2D.Dynamics.b2Body;
-import cn.geckos.box2dShell.data.PolyData;
-import cn.geckos.box2dShell.engine.B2dShell;
+import cn.geckos.box2dShell.core.B2dShell;
+import cn.geckos.box2dShell.model.PolyData;
 import cn.geckos.box2dShell.plugs.event.PlugsEvent;
-import cn.geckos.geom.Vector2D;
-import cn.geckos.utils.ArrayUtil;
+import cn.geckos.box2dShell.utils.ArrayUtil;
+import cn.geckos.box2dShell.utils.B2dUtil;
 import flash.display.DisplayObjectContainer;
 import flash.display.Sprite;
 import flash.events.EventDispatcher;
@@ -94,8 +94,9 @@ public class LineFloor extends EventDispatcher
 			this.lineFloorMode && 
 			this.drawSprite)
 		{
-			var v2d:Vector2D = new Vector2D(this.stage.mouseX, this.stage.mouseY);
-			if (v2d.dist(new Vector2D(this.prevPosX, this.prevPosY)) >= this.drawLineDis)
+			var p1:Point = new Point(this.stage.mouseX, this.stage.mouseY);
+			var p2:Point = new Point(this.prevPosX, this.prevPosY);
+			if (Point.distance(p1, p2) >= this.drawLineDis)
 			{
 				this.drawSprite.graphics.lineTo(this.stage.mouseX, this.stage.mouseY);
 				this.prevPosX = this.stage.mouseX;
@@ -112,17 +113,26 @@ public class LineFloor extends EventDispatcher
 	private function createPathFloor(pathList:Array):void
 	{
 		var length:int = pathList.length / 2 - 1;
+		var sx:int;
+		var sy:int;
+		var ex:int;
+		var ey:int;
+		var p1:Point;
+		var p2:Point;
+		var dist:Number;
+		var angle:Number;
 		for (var i:int = 0; i < length; i += 1) 
 		{
 			//参考www.emanueleferonato.com/2013/01/10/way-of-an-idea-prototype-updated-to-box2d-2-1a-and-nape/
 			//先线段的 0，1，2，3分成一个规律的组合，0，1分别为上一次鼠标坐标，2，3为当前鼠标坐标。
-			var sx:int = pathList[i * 2];
-			var sy:int = pathList[i * 2 + 1];
-			var ex:int = pathList[i * 2 + 2];
-			var ey:int = pathList[i * 2 + 3];
-			var v2d:Vector2D = new Vector2D(sx, sy);
-			var dist:Number = v2d.dist(new Vector2D(ex, ey));
-			var angle:Number = v2d.angleBetween(new Vector2D(ex, ey), false);
+			sx = pathList[i * 2];
+			sy = pathList[i * 2 + 1];
+			ex = pathList[i * 2 + 2];
+			ey = pathList[i * 2 + 3];
+			p1 = new Point(sx, sy);
+			p2 = new Point(ex, ey);
+			dist = Point.distance(p1, p2);
+			angle = B2dUtil.angleBetween(p1, p2, false);
 			this.createFloorPolygonBody((sx + ex) * .5, (sy + ey) * .5, dist, 4, angle);
 		}
 	}
@@ -138,7 +148,6 @@ public class LineFloor extends EventDispatcher
 	private function createFloorPolygonBody(pX:Number, pY:Number, width:Number, height:Number, angle:Number):b2Body
 	{
 		var polyData:PolyData = new PolyData();
-		polyData.container = stage;
 		polyData.friction = 0.5;
 		polyData.density = 1;
 		polyData.restitution = 0.5;

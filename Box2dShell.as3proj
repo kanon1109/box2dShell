@@ -17,8 +17,8 @@
   <classpaths>
     <class path="src" />
     <class path="box2d\Source" />
-    <class path="libs" />
     <class path="..\effectlibs\src" />
+    <class path="libs" />
   </classpaths>
   <!-- Build options -->
   <build>
