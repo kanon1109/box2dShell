@@ -665,7 +665,7 @@ public class B2dShell
 			return true;
 		}
 		/**
-		 * 查找重叠的刚体
+		 * 根据创建的aabb 查找重叠的刚体
 		 */
 		this.world.QueryAABB(GetBodyCallback, aabb);
 		return body;

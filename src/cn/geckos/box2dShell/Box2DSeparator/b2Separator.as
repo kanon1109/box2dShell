@@ -19,10 +19,6 @@ package cn.geckos.box2dShell.Box2DSeparator
 
 	public class b2Separator
 	{
-		public function b2Separator()
-		{
-		}
-		
 		/**
 		 * Separates a non-convex polygon into convex polygons and adds them as fixtures to the <code>body</code> parameter.<br/>
 		 * There are some rules you should follow (otherwise you might get unexpected results) :
@@ -48,17 +44,17 @@ package cn.geckos.box2dShell.Box2DSeparator
 			var vec:Vector.<b2Vec2> = new Vector.<b2Vec2>(), figsVec:Array;
 			var polyShape:b2PolygonShape;
 			
-			for(i=0; i<n; i++) vec.push(new b2Vec2(verticesVec[i].x*scale, verticesVec[i].y*scale));
+			for (i = 0; i < n; i++) vec.push(new b2Vec2(verticesVec[i].x * scale, verticesVec[i].y * scale));
 			
 			figsVec = calcShapes(vec);
 			n = figsVec.length;	
 
-			for(i=0; i<n; i++)
+			for (i = 0; i < n; i++)
 			{
 				verticesVec = new Vector.<b2Vec2>();
 				vec = figsVec[i];
 				m = vec.length;
-				for(j=0; j<m; j++) verticesVec.push(new b2Vec2(vec[j].x/scale, vec[j].y/scale));
+				for (j = 0; j < m; j++) verticesVec.push(new b2Vec2(vec[j].x / scale, vec[j].y / scale));
 								
 				polyShape = new b2PolygonShape();
 				polyShape.SetAsVector(verticesVec);
@@ -98,7 +94,8 @@ package cn.geckos.box2dShell.Box2DSeparator
 					{
 						if(!fl)
 						{
-							d = det(verticesVec[i].x, verticesVec[i].y, verticesVec[i2].x, verticesVec[i2].y, verticesVec[j].x, verticesVec[j].y);
+							d = det(verticesVec[i].x, verticesVec[i].y, verticesVec[i2].x, 
+									verticesVec[i2].y, verticesVec[j].x, verticesVec[j].y);
 							if (d > 0) 
 								fl = true;
 						}
@@ -106,7 +103,9 @@ package cn.geckos.box2dShell.Box2DSeparator
 						if(j!=i3)
 						{
 							j2 = (j < n - 1?j + 1:0);
-							if(hitSegment(verticesVec[i].x, verticesVec[i].y, verticesVec[i2].x, verticesVec[i2].y, verticesVec[j].x, verticesVec[j].y, verticesVec[j2].x, verticesVec[j2].y))
+							if (hitSegment(verticesVec[i].x, verticesVec[i].y, verticesVec[i2].x, 
+										   verticesVec[i2].y, verticesVec[j].x, verticesVec[j].y, 
+										   verticesVec[j2].x, verticesVec[j2].y))
 								ret = 1;
 						}
 					}
@@ -145,25 +144,25 @@ package cn.geckos.box2dShell.Box2DSeparator
 				for(i=0; i<n; i++)
 				{
 					i1 = i;
-					i2 = (i<n-1?i+1:i+1-n);
-					i3 = (i<n-2?i+2:i+2-n);
+					i2 = (i < n - 1?i + 1:i + 1 - n);
+					i3 = (i < n - 2?i + 2:i + 2 - n);
 
 					p1 = vec[i1];
 					p2 = vec[i2];
 					p3 = vec[i3];
 					
 					d = det(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
-					if(d<0)
+					if (d < 0)
 					{
 						isConvex = false;
 						minLen = Number.MAX_VALUE;
 						
-						for(j=0; j<n; j++)
+						for (j = 0; j < n; j++)
 						{
-							if(j!=i1&&j!=i2)
+							if (j != i1 && j != i2)
 							{
 								j1 = j;
-								j2 = (j<n-1?j+1:0);
+								j2 = (j < n - 1?j + 1:0);
 
 								v1 = vec[j1];
 								v2 = vec[j2];
@@ -172,10 +171,10 @@ package cn.geckos.box2dShell.Box2DSeparator
 								
 								if(v)
 								{
-									dx = p2.x-v.x;
-									dy = p2.y-v.y;
-									t = dx*dx+dy*dy;
-									if(t<minLen)
+									dx = p2.x - v.x;
+									dy = p2.y - v.y;
+									t = dx * dx + dy * dy;
+									if (t < minLen)
 									{
 										h = j1;
 										k = j2;
@@ -185,7 +184,7 @@ package cn.geckos.box2dShell.Box2DSeparator
 								}
 							}
 						}
-						if(minLen==Number.MAX_VALUE) err();
+						if (minLen == Number.MAX_VALUE) err();
 						
 						vec1 = new Vector.<b2Vec2>();
 						vec2 = new Vector.<b2Vec2>();
@@ -195,8 +194,8 @@ package cn.geckos.box2dShell.Box2DSeparator
 						v1 = vec[j1];
 						v2 = vec[j2];
 						
-						if(!pointsMatch(hitV.x, hitV.y, v2.x, v2.y)) vec1.push(hitV);
-						if(!pointsMatch(hitV.x, hitV.y, v1.x, v1.y)) vec2.push(hitV);
+						if (!pointsMatch(hitV.x, hitV.y, v2.x, v2.y)) vec1.push(hitV);
+						if (!pointsMatch(hitV.x, hitV.y, v1.x, v1.y)) vec2.push(hitV);
 												
 						h = -1;
 						k = i1;
@@ -205,13 +204,13 @@ package cn.geckos.box2dShell.Box2DSeparator
 							if(k!=j2) vec1.push(vec[k]);
 							else
 							{
-								if(h<0||h>=n) err();
+								if (h<0||h>=n) err();
 								if(!this.isOnSegment(v2.x, v2.y, vec[h].x, vec[h].y, p1.x, p1.y)) vec1.push(vec[k]);
 								break;
 							}
 
 							h = k;
-							if(k-1<0) k = n-1;
+							if (k - 1 < 0) k = n - 1;
 							else k--;
 						}
 						
@@ -224,13 +223,13 @@ package cn.geckos.box2dShell.Box2DSeparator
 							if(k!=j1) vec2.push(vec[k]);
 							else
 							{
-								if(h<0||h>=n) err();
-								if(k==j1&&!this.isOnSegment(v1.x, v1.y, vec[h].x, vec[h].y, p2.x, p2.y)) vec2.push(vec[k]);
+								if (h<0||h>=n) err();
+								if (k == j1 && !this.isOnSegment(v1.x, v1.y, vec[h].x, vec[h].y, p2.x, p2.y)) vec2.push(vec[k]);
 								break;
 							}
 
 							h = k;
-							if(k+1>n-1) k = 0;
+							if (k + 1 > n - 1) k = 0;
 							else k++;
 						}
 						
@@ -279,23 +278,23 @@ package cn.geckos.box2dShell.Box2DSeparator
 		
 		private function isOnSegment(px:Number, py:Number, x1:Number, y1:Number, x2:Number, y2:Number):Boolean
 		{
-			var b1:Boolean = ((x1+0.1>=px&&px>=x2-0.1)||(x1-0.1<=px&&px<=x2+0.1));
-			var b2:Boolean = ((y1+0.1>=py&&py>=y2-0.1)||(y1-0.1<=py&&py<=y2+0.1));
-			return (b1&&b2&&isOnLine(px, py, x1, y1, x2, y2));
+			var b1:Boolean = ((x1 + 0.1 >= px && px >= x2 - 0.1) || (x1 - 0.1 <= px && px <= x2 + 0.1));
+			var b2:Boolean = ((y1 + 0.1 >= py && py >= y2 - 0.1) || (y1 - 0.1 <= py && py <= y2 + 0.1));
+			return (b1 && b2 && isOnLine(px, py, x1, y1, x2, y2));
 		}
 		
 		private function pointsMatch(x1:Number, y1:Number, x2:Number, y2:Number):Boolean
 		{
-			var dx:Number = (x2>=x1?x2-x1:x1-x2), dy:Number = (y2>=y1?y2-y1:y1-y2);
-			return (dx<0.1&&dy<0.1);
+			var dx:Number = (x2 >= x1?x2 - x1:x1 - x2), dy:Number = (y2 >= y1?y2 - y1:y1 - y2);
+			return (dx < 0.1 && dy < 0.1);
 		}
 		
 		private function isOnLine(px:Number, py:Number, x1:Number, y1:Number, x2:Number, y2:Number):Boolean
 		{
-			if(x2-x1>0.1||x1-x2>0.1)
+			if (x2 - x1 > 0.1 || x1 - x2 > 0.1)
 			{
-				var a:Number = (y2-y1)/(x2-x1), possibleY:Number = a*(px-x1)+y1, diff:Number = (possibleY>py?possibleY-py:py-possibleY);
-				return (diff<0.1);
+				var a:Number = (y2 - y1) / (x2 - x1), possibleY:Number = a * (px - x1) + y1, diff:Number = (possibleY > py?possibleY - py:py - possibleY);
+				return (diff < 0.1);
 			}
 			
 			return (px-x1<0.1||x1-px<0.1);			
@@ -303,7 +302,7 @@ package cn.geckos.box2dShell.Box2DSeparator
 		
 		private function det(x1:Number, y1:Number, x2:Number, y2:Number, x3:Number, y3:Number):Number
 		{
-			return x1*y2+x2*y3+x3*y1-y1*x2-y2*x3-y3*x1;    
+			return x1 * y2 + x2 * y3 + x3 * y1 - y1 * x2 - y2 * x3 - y3 * x1;
 		}
 		
 		private function err():void

@@ -1,11 +1,11 @@
 package  
 {
 import Box2D.Dynamics.b2Body;
-import cn.geckos.box2dShell.model.PolyData;
 import cn.geckos.box2dShell.core.B2dShell;
+import cn.geckos.box2dShell.model.PolyData;
 import cn.geckos.box2dShell.plugs.event.PlugsEvent;
 import cn.geckos.box2dShell.plugs.Slice;
-import cn.geckos.box2dShell.plugs.Texture;
+import cn.geckos.box2dShell.plugs.textures.Texture;
 import flash.display.BitmapData;
 import flash.display.Sprite;
 import flash.events.Event;

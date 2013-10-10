@@ -1,4 +1,4 @@
-package cn.geckos.box2dShell.plugs 
+package cn.geckos.box2dShell.plugs.textures 
 {
 import flash.display.BitmapData;
 import flash.display.DisplayObject;
