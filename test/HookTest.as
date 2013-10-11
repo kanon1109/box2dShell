@@ -51,8 +51,6 @@ public class HookTest extends Sprite
             bodyData.postion = new Point(Math.random() * 500 + 20, Math.random() * 150 + 20);
             body = this.b2dShell.createPoly(bodyData);
             this.hook.addHookBody(body);
-            if (i < 19)
-                this.hook.removeHookBody(body);
         }
         
         for (i = 0; i < 10; i++) 
