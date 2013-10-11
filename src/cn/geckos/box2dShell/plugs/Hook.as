@@ -26,10 +26,18 @@ public class Hook
 	//是否已经勾住
 	private var isHooked:Boolean;
 	private var b2dShell:B2dShell;
+    //拉起的速度
+    private var _pullSpeed:Number;
 	public function Hook(stage:Stage, b2dShell:B2dShell)
 	{
 		this.stage = stage;
 		this.b2dShell = b2dShell;
+        if (!this.b2dShell) 
+        {
+            throw new Error("error b2dShell is null");
+            return;
+        }
+        this._pullSpeed = .99;
 		this.init();
 	}
 	
@@ -47,18 +55,19 @@ public class Hook
 	
 	private function mouseUpHandler(event:MouseEvent):void 
 	{
-		
+		this.isHooked = false;
+        this.removeJoints();
 	}
 	
 	private function mouseDownHandler(event:MouseEvent):void 
 	{
-		if (!this.b2dShell) return;
         this.removeJoints();
-		var body:b2Body = this.b2dShell.getBodyByPostion(this.stage.mouseX, 
-                                                         this.stage.mouseY, 
-                                                         true);
+        var mousePos:b2Vec2 = new b2Vec2(this.stage.mouseX / B2dShell.CONVERSION, 
+                                         this.stage.mouseY / B2dShell.CONVERSION)
+		var body:b2Body = this.b2dShell.getBodyByPostion(mousePos.x, mousePos.y, true);
+                                                         
         if (this.bodyDict[body])
-            this.createHookJoint(body);
+            this.createHookJoint(body, mousePos);
 	}
     
    /**
@@ -72,6 +81,7 @@ public class Hook
         var distanceJoint:b2DistanceJoint;
         for each (sourceBody in this.sourceBodyDict) 
         {
+            //创建关节
             var distanceJointDef:b2DistanceJointDef = new b2DistanceJointDef();
             distanceJointDef.Initialize(sourceBody, touchedBody,
                                         sourceBody.GetWorldCenter(),
@@ -122,6 +132,39 @@ public class Hook
 	{
         delete this.bodyDict[body];
     }
+    
+    /**
+     * 删除源头刚体
+     * @param	body    源头刚体
+     */
+    public function removeSourceBody(body:b2Body):void
+	{
+        delete this.sourceBodyDict[body];
+    }
+    
+    /**
+     * 更新钩子关节
+     */
+    public function update():void
+    {
+        if (this.isHooked)
+        {
+            var length:Number;
+            var distanceJoint:b2DistanceJoint;
+            for each (distanceJoint in this.jointsDict) 
+            {
+                //将长度逐渐缩短
+                length = distanceJoint.GetLength();
+                if (length > .1) distanceJoint.SetLength(length * this._pullSpeed);
+            }
+            var sourceBody:b2Body;
+            for each (sourceBody in this.sourceBodyDict) 
+            {
+                //唤醒源头刚体
+                sourceBody.SetAwake(true);
+            }
+        }
+    }
 	
 	/**
 	 * 销毁
@@ -137,5 +180,14 @@ public class Hook
 		this.stage = null;
 		this.b2dShell = null;
 	}
+    
+    /**
+     * 拉起的速度
+     */
+    public function get pullSpeed():Number { return _pullSpeed; };
+    public function set pullSpeed(value:Number):void 
+    {
+        _pullSpeed = value;
+    }
 }
 }

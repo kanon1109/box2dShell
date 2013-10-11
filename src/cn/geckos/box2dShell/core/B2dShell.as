@@ -44,7 +44,7 @@ public class B2dShell
 	private var _timeStep:Number;
 	//速度计算层级 用于精准性
 	private var _velocityIterations:int;
-	//位置计算层级
+	//位置计算层级 更低的迭代值会让你牺牲一些准确性，相反的为你的程序提升一部分性能。
 	private var _positionIterations:int;
 	//刚体
 	private var body:b2Body;
@@ -78,6 +78,9 @@ public class B2dShell
 	private var separator:b2Separator;
 	public function B2dShell()
 	{
+        this._timeStep = 1.0 / 30.0;
+        this._velocityIterations = 10;
+        this._positionIterations = 10;
 		this.bodyDef = new b2BodyDef();
 		this.fixtureDef = new b2FixtureDef();
 		this.destroyJointDict = new Dictionary();
