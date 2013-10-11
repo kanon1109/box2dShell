@@ -59,12 +59,15 @@ public class HookTest extends Sprite
             bodyData.bodyType =  b2Body.b2_dynamicBody;
             bodyData.width = 20;
             bodyData.height = 20;
+            bodyData.density = 1;
+            bodyData.friction = .5;
+            bodyData.restitution = .4;
             bodyData.boxPoint = new Point(bodyData.width * .5, bodyData.height * .5);
             bodyData.postion = new Point(Math.random() * 500 + 20, Math.random() * 370 + 150);
             body = this.b2dShell.createPoly(bodyData);
             this.hook.addSourceBody(body);
-            if (i < 9)
-                this.hook.removeSourceBody(body);
+            /*if (i < 9)
+                this.hook.removeSourceBody(body);*/
         }
         
         this.addEventListener(Event.ENTER_FRAME, loop);
